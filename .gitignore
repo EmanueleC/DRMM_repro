@@ -1,0 +1,9 @@
+data/
+preprocessing/pre_data/
+preprocessing/encoded_data/
+data_analysis/
+plot_metrics/
+histograms/pictures/
+trec_eval.9.0.4/
+run_results/
+preranked/
