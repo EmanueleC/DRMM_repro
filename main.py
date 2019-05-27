@@ -27,11 +27,12 @@ learning_rate = 1e-2
 gating_function = data["gating_function"]
 num_epochs = data["num_epochs"]
 conf = data["conf"]
+glv =data["use_glove"]
 
 padded_query_idfs_filename = "preprocessing/encoded_data/idfs/padded_query_idfs" + conf
 padded_query_embs_filename = "preprocessing/encoded_data/embeddings/padded_query_embs" + conf
-histograms_total_filename = "preprocessing/encoded_data/histograms/histograms_total" + conf + "_" + histograms_mode
-qrels_path = "Qrels_cleaned.txt"
+histograms_total_filename = "preprocessing/encoded_data/histograms/histograms_total" + conf + "_glove_" + str(glv) + "_" + histograms_mode
+qrels_path = "preprocessing/pre_data/Qrels/Qrels_cleaned.txt"
 
 padded_query_idfs = load_from_pickle_file(padded_query_idfs_filename)
 padded_query_embs = load_from_pickle_file(padded_query_embs_filename)
@@ -55,7 +56,7 @@ all_p20_test = []
 all_ndcg20_test = []
 all_prec_rec_test = []
 for k in range(5):
-    ids_train_fold = ids_train[k]  # do. not. shuffle.
+    ids_train_fold = ids_train[k]  # do. not. shuffle. (see loss function)
     ids_test_fold = ids_test[k]
     with tf.Session() as session:
         tf.random.set_random_seed(SEED)

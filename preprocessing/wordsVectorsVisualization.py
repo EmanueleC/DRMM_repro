@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from gensim.models import Word2Vec
 from sklearn.manifold import TSNE
 import numpy as np
+import json
 
 
 def display_whole_plot(model):
@@ -16,12 +17,14 @@ def display_whole_plot(model):
     words = list(vocab)
     for i, word in enumerate(words):
         plt.annotate(word, xy=(result[i, 0], result[i, 1]))
-    # plt.show()
+    nameFig = "histograms/pictures/WholeModel.png"
+    plt.savefig(nameFig)
+    plt.clf()
 
 
-def display_closestwords_tsnescatterplot(model, word):
+def display_closestwords_tsnescatterplot(model, word, emb_size):
 
-    arr = np.empty((0, 100), dtype='f')
+    arr = np.empty((0, emb_size), dtype='f')
     word_labels = [word]
 
     # get close words
@@ -48,15 +51,16 @@ def display_closestwords_tsnescatterplot(model, word):
         plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points')
     plt.xlim(x_coords.min() + 0.00005, x_coords.max() + 0.00005)
     plt.ylim(y_coords.min() + 0.00005, y_coords.max() + 0.00005)
-    #plt.show()
-    nameFig = "figures/" + word + "Similarities.png"
+    nameFig = "histograms/pictures/" + word + "Similarities.png"
     plt.savefig(nameFig)
 
 
-def main():
-    model = Word2Vec.load('embeddings.bin')
-    word = input("Enter the word you wish to explore:\n")
-    display_closestwords_tsnescatterplot(model, word)
-    display_whole_plot(model)
+with open('config.json') as config_file:
+    data = json.load(config_file)
 
-main()
+conf = data["conf"]
+emb_size = data["emb_size"]
+model = Word2Vec.load("preprocessing/pre_data/models/corpus_model" + conf + ".bin")
+word = input("Enter the word you wish to explore:\n")
+display_closestwords_tsnescatterplot(model, word, emb_size)
+# display_whole_plot(model)  # too big

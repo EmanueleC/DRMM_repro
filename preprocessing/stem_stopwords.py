@@ -1,5 +1,6 @@
-from utilities.utilities import load_from_pickle_file, save_to_pickle_file, stem
+from utilities.utilities import load_from_pickle_file, save_to_pickle_file
 from tqdm import tqdm
+from nltk.stem.porter import *
 import json
 
 with open('config.json') as config_file:
@@ -35,6 +36,8 @@ if stopwords:
 
 if stemmed:
 
+    stemmer = PorterStemmer()
+
     vocab = load_from_pickle_file("preprocessing/pre_data/vocabulary")
 
     for _, query in tqdm(queries_obj.items()):
@@ -46,7 +49,7 @@ if stemmed:
     print("Stemming...")
 
     for word in tqdm(vocab):
-        mapping_stemmed[word] = stem(word)
+        mapping_stemmed[word] = stemmer.stem(word)
 
     for _, doc in tqdm(corpus_obj.docs.items()):
         doc.headline = " ".join([mapping_stemmed[word] for word in doc.headline.split()])
@@ -56,10 +59,14 @@ if stemmed:
         query.title = " ".join([mapping_stemmed[word] for word in query.title.split()])
         query.desc = " ".join([mapping_stemmed[word] for word in query.desc.split()])
 
-filename = "preprocessing/pre_data/Corpus/Corpus"
+corpus_filename = "preprocessing/pre_data/Corpus/Corpus"
 
-save_to_pickle_file(filename + conf, corpus_obj)
+save_to_pickle_file(corpus_filename + conf, corpus_obj)
 
-filename = "preprocessing/pre_data/Queries/Queries"
+stemmed_filename = "preprocessing/pre_data/Corpus/stem_map"
 
-save_to_pickle_file(filename + conf, queries_obj)
+save_to_pickle_file(stemmed_filename + conf, mapping_stemmed)
+
+queries_filename = "preprocessing/pre_data/Queries/Queries"
+
+save_to_pickle_file(queries_filename + conf, queries_obj)

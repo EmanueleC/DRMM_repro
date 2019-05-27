@@ -457,7 +457,7 @@ def load_glove_model(gloveFile):
     return model
 
 
-def plot_histograms(key, histogram, hist_mode, label):
+def plot_histograms(key, histogram, hist_mode, label, conf):
     topic = key[0]
     document = key[1]
     m = np.array(histogram)
@@ -468,5 +468,5 @@ def plot_histograms(key, histogram, hist_mode, label):
     plt.xlabel("opposite <- orthogonal -> similar (buckets)")
     plt.ylabel("Query terms")
     path_hist = "histograms/pictures/"
-    plt.savefig(path_hist + str(key) + label + '_' + str(hist_mode))
+    plt.savefig(path_hist + str(key) + label + '_' + str(hist_mode) + conf)
     plt.close()

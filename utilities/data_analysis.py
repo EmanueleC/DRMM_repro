@@ -1,6 +1,6 @@
 from utilities.utilities import load_all_data
 from statistics import mean, stdev, median, mode, variance, StatisticsError
-import argparse
+import json
 import matplotlib.pyplot as plt
 
 
@@ -30,15 +30,13 @@ def print_info_length(data, name_list, attr, plot):
     return stats
 
 
-parser = argparse.ArgumentParser()
+with open('config.json') as config_file:
+    data = json.load(config_file)
 
-parser.add_argument('-sw', action="store_true", default=False, dest='sw')
-parser.add_argument('-st', action="store_true", default=False, dest='st')
-
-results = parser.parse_args()
-
-stopwords = results.sw
-stemmed = results.st
+stopwords = data["stopwords"]
+stemmed = data["stemmed"]
+glv = data["use_glove"]
+conf = data["conf"]
 
 corpus_obj, queries_obj, qrels_obj, queries_model, corpus_model = load_all_data(stopwords, stemmed)
 
@@ -60,15 +58,8 @@ text += "\nLongest document text: " + str(max(lines_corpus_splitted)) + " words"
 text += "\nShortest query text: " + str(min(lines_queries_splitted)) + " words"
 text += "\nLongest query text: " + str(max(lines_queries_splitted)) + " words"
 
-attr = ""
-
-if stopwords:
-    attr = attr + "_stopwords"
-if stemmed:
-    attr = attr + "_stemmed"
-
-text += print_info_length(lines_corpus_splitted, "corpus docs" + attr, "words", True)
-text += print_info_length(lines_queries_splitted, "queries" + attr, "words", True)
+text += print_info_length(lines_corpus_splitted, "corpus docs" + conf, "words", True)
+text += print_info_length(lines_queries_splitted, "queries" + conf, "words", True)
 
 text += '\n' + str(corpus_model)
 
@@ -76,5 +67,5 @@ w1 = "night"
 
 text += '\n' + str(corpus_model.wv.most_similar(positive=w1, topn=6))
 
-with open("data_analysis/data_analysis" + attr + ".txt", 'w') as file:
+with open("data_analysis/data_analysis" + conf + ".txt", 'w') as file:
     file.write(text)
