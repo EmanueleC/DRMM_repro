@@ -31,7 +31,8 @@ glv =data["use_glove"]
 
 padded_query_idfs_filename = "preprocessing/encoded_data/idfs/padded_query_idfs" + conf
 padded_query_embs_filename = "preprocessing/encoded_data/embeddings/padded_query_embs" + conf
-histograms_total_filename = "preprocessing/encoded_data/histograms/histograms_total" + conf + "_glove_" + str(glv) + "_" + histograms_mode
+histograms_total_filename = "preprocessing/encoded_data/histograms/histograms_total" + conf + "_glove_" + str(glv)\
+                            + "_" + histograms_mode
 qrels_path = "preprocessing/pre_data/Qrels/Qrels_cleaned.txt"
 
 padded_query_idfs = load_from_pickle_file(padded_query_idfs_filename)
@@ -42,12 +43,7 @@ max_query_len = len(list(padded_query_idfs.values())[0])
 
 print("max query len:", max_query_len)
 
-ids_train, _, ids_test = load_ids()
-
-count = 0
-for fold in ids_train:
-    print("Len fold", len(fold))
-    count += len(fold)
+ids_train, ids_validation, ids_test = load_ids()
 
 matching_histograms = MatchingHistograms(num_bins, max_query_len)
 
@@ -56,7 +52,8 @@ all_p20_test = []
 all_ndcg20_test = []
 all_prec_rec_test = []
 for k in range(5):
-    ids_train_fold = ids_train[k]  # do. not. shuffle. (see loss function)
+    ids_train_fold = ids_train[k]  # do NOT shuffle (see loss function)
+    ids_val_fold = ids_validation[k]
     ids_test_fold = ids_test[k]
     with tf.Session() as session:
         tf.random.set_random_seed(SEED)
@@ -64,18 +61,24 @@ for k in range(5):
         model = DRMM(num_layers, units, activation_functions, max_query_len, num_bins, emb_size, gating_function, SEED,
                      learning_rate)
         session.run(tf.global_variables_initializer())
-        steps = len(ids_train_fold) - batch_size
+        steps = len(ids_val_fold) - batch_size
         print("Number of steps per epoch:", int(steps/batch_size))
-        all_losses = []
+        all_losses_train = []
         all_map_train = []
         all_p20_train = []
         all_ndcg20_train = []
+        all_losses_val = []
+        all_map_val = []
+        all_p20_val = []
+        all_ndcg20_val = []
         for epoch in range(num_epochs):
             start_time = time.time()
-            epoch_loss = 0
+            epoch_train_loss = 0
+            epoch_val_loss = 0
 
             i = 0
             sims_train_epoch = []
+            sims_val_epoch = []
             while i < steps:
                 start = i
                 end = i + batch_size
@@ -83,6 +86,10 @@ for k in range(5):
                 batch_hist = []
                 batch_idf = []
                 batch_emb = []
+                batch_hist_val = []
+                batch_idf_val = []
+                batch_emb_val = []
+
                 for (query_id, document_id) in ids_train_fold[start:end]:
                     '''query = queries.get(query_id)
                     document = corpus.get(document_id)
@@ -93,30 +100,63 @@ for k in range(5):
                     batch_idf.append(padded_query_idfs.get(query_id))
                     batch_emb.append(padded_query_embs.get(query_id))
 
+                for (query_id, document_id) in ids_val_fold[start:end]:
+                    '''query = queries.get(query_id)
+                    document = corpus.get(document_id)
+                    oov_document = oov_corpus.get(document_id)
+                    oov_query = oov_queries.get(query_id)'''
+                    hist = histograms_total[(query_id, document_id)]
+                    batch_hist_val.append(hist)
+                    batch_idf_val.append(padded_query_idfs.get(query_id))
+                    batch_emb_val.append(padded_query_embs.get(query_id))
+
                 assert np.array(batch_hist).shape[1:] == model.matching_histograms.shape[1:]
                 assert np.array(batch_idf).shape[1:] == model.queries_idf.shape[1:]
                 assert np.array(batch_emb).shape[1:] == model.queries_embeddings.shape[1:]
-                sims_batch_train, _, c = session.run([model.sims, model.optimizer, model.loss],
-                                                     feed_dict={model.matching_histograms: batch_hist,
-                                                                model.queries_idf: batch_idf,
-                                                                model.queries_embeddings: batch_emb})
+                assert np.array(batch_hist_val).shape[1:] == model.matching_histograms.shape[1:]
+                assert np.array(batch_idf_val).shape[1:] == model.queries_idf.shape[1:]
+                assert np.array(batch_emb_val).shape[1:] == model.queries_embeddings.shape[1:]
+                sims_batch_train, _, c_train = session.run([model.sims, model.optimizer, model.loss],
+                                                           feed_dict={model.matching_histograms: batch_hist,
+                                                                      model.queries_idf: batch_idf,
+                                                                      model.queries_embeddings: batch_emb})
+                sims_batch_val, c_val = session.run([model.sims, model.loss],
+                                                    feed_dict={model.matching_histograms: batch_hist_val,
+                                                               model.queries_idf: batch_idf_val,
+                                                               model.queries_embeddings: batch_emb_val})
                 assert len(sims_batch_train) == batch_size
                 sims_train_epoch += list(sims_batch_train)
-                epoch_loss += c
+                sims_val_epoch += list(sims_batch_val)
+                epoch_train_loss += c_train
+                epoch_val_loss += c_val
                 i += batch_size
 
-            print('Epoch %s, loss=%2.4f, time=%4.4fs' % (epoch, epoch_loss, time.time() - start_time))
-            all_losses.append(epoch_loss)
-            train_epoch_run_text = score_to_text_run(sims_train_epoch, ids_train_fold, "sw_st_idf_ch")
+            print('Epoch %s' % epoch)
+            print('train_loss=%2.4f, time=%4.4fs' % (epoch_train_loss, time.time() - start_time))
+            print('val_loss=%2.4f, time=%4.4fs' % (epoch_val_loss, time.time() - start_time))
+            all_losses_train.append(epoch_train_loss)
+            all_losses_val.append(epoch_val_loss)
+            train_epoch_run_text = score_to_text_run(sims_train_epoch, ids_train_fold, "sw_st_idf_lch")
+            val_epoch_run_text = score_to_text_run(sims_val_epoch, ids_val_fold, "sw_st_idf_lch")
             with open("run_results/training/train_epoch_run_" + str(k) + ".txt", 'w') as file:
                 file.write(train_epoch_run_text)
-            map, p20, ndcg20 = get_metrics_run("run_results/training/train_epoch_run_" + str(k) + ".txt", qrels_path, False)
-            print(map, p20, ndcg20)
-            all_map_train.append(map)
-            all_p20_train.append(p20)
-            all_ndcg20_train.append(ndcg20)
+            with open("run_results/validation/val_epoch_run_" + str(k) + ".txt", 'w') as file:
+                file.write(val_epoch_run_text)
+            map_train, p20_train, ndcg20_train = get_metrics_run("run_results/training/train_epoch_run_" + str(k) +
+                                                                 ".txt", qrels_path, False)
+            map_val, p20_val, ndcg20_val = get_metrics_run("run_results/validation/val_epoch_run_" + str(k) +
+                                                           ".txt", qrels_path, False)
+            print("train_metrics", map_train, p20_train, ndcg20_train)
+            print("val_metrics", map_val, p20_val, ndcg20_val)
+            all_map_train.append(map_train)
+            all_p20_train.append(p20_train)
+            all_ndcg20_train.append(ndcg20_train)
+            all_map_val.append(map_val)
+            all_p20_val.append(p20_val)
+            all_ndcg20_val.append(ndcg20_val)
 
-        make_metric_plot(all_losses, all_map_train, all_p20_train, all_ndcg20_train, k)
+        make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_train, all_losses_val, all_map_val,
+                         all_p20_val, all_ndcg20_val, k)
 
         hist_test = []
         idf_test = []

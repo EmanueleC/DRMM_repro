@@ -1,14 +1,15 @@
 from utilities.utilities import load_from_pickle_file, save_to_pickle_file
 from tqdm import tqdm
 import random
+import itertools
 
 labels_train_filename = "preprocessing/pre_data/ids/ids_train"
 labels_validation_filename = "preprocessing/pre_data/ids/ids_validation"
 labels_test_filename = "preprocessing/pre_data/ids/ids_test"
 
-n_pos = 50
-n_neg = 50
-n_val = 10
+n_pos = 100
+n_neg = 100
+n_val = 150
 k = 5  # for k-fold cross validation
 random.seed(42)
 
@@ -20,18 +21,29 @@ def prepare_train_validation_ids(qrels, topics_train):
     for topic in tqdm(topics_train):
         rels = list(qrels.get_relevant_docs(str(topic)).keys())
         nonrels = list(qrels.get_non_relevant_docs(str(topic)).keys())
+        pos_train = []
+        neg_train = []
         # possible repetition
         if len(rels) > 0 and len(nonrels) > 0:
             i = 0
             j = 0
-            while i < n_pos + n_neg:
-                ids_train.append(random.choice(rels))
-                ids_train.append(random.choice(nonrels))
-                i += 2
+
+            while i < n_pos:
+                pos_train.append(random.choice(rels))
+                i += 1
+            i = 0
+
+            while i < n_neg:
+                neg_train.append(random.choice(nonrels))
+                i += 1
+
+            ids_train = [x for x in itertools.chain.from_iterable(itertools.zip_longest(pos_train, neg_train)) if x]
+
             while j < n_val:
                 ids_validation.append(random.choice(rels))
                 ids_validation.append(random.choice(nonrels))
                 j += 2
+
     #("len training labels", len(ids_train))
     #print("len validation labels", len(ids_validation))
     return ids_train, ids_validation
@@ -42,7 +54,7 @@ def prepare_test_ids(qrels, topics_test):
     for topic in topics_test:
         pairs = qrels.get_pairs_topic(str(topic))
         ids_test.update(pairs)
-    print("len test labels", len(ids_test.keys()))
+    # print("len test labels", len(ids_test.keys()))
     return list(ids_test.keys())
 
 
