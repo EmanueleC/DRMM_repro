@@ -6,6 +6,7 @@ import tensorflow as tf
 import numpy as np
 import time
 import json
+import math
 
 with open('config.json') as config_file:
     data = json.load(config_file)
@@ -14,6 +15,7 @@ SEED = data["seed"]
 stopwords = data["stopwords"]
 stemmed = data["stemmed"]
 histograms_mode = data["hist_mode"]
+min_delta = data["min_delta"]
 
 SEED = 42
 num_layers = 3
@@ -51,6 +53,8 @@ all_map_test = []
 all_p20_test = []
 all_ndcg20_test = []
 all_prec_rec_test = []
+best_val_loss = math.inf
+saver = tf.train.Saver()
 for k in range(5):
     ids_train_fold = ids_train[k]  # do NOT shuffle (see loss function)
     ids_val_fold = ids_validation[k]
@@ -134,6 +138,11 @@ for k in range(5):
             print('Epoch %s' % epoch)
             print('train_loss=%2.4f, time=%4.4fs' % (epoch_train_loss, time.time() - start_time))
             print('val_loss=%2.4f, time=%4.4fs' % (epoch_val_loss, time.time() - start_time))
+            if best_val_loss - epoch_val_loss < min_delta:  # early stopping
+                break
+            if epoch_val_loss < best_val_loss:  # save model with best validation loss
+                best_val_loss = epoch_val_loss
+                save_path = saver.save(session, "models/model.ckpt")
             all_losses_train.append(epoch_train_loss)
             all_losses_val.append(epoch_val_loss)
             train_epoch_run_text = score_to_text_run(sims_train_epoch, ids_train_fold, "sw_st_idf_lch")
@@ -170,6 +179,7 @@ for k in range(5):
             hist_test.append(hist)
             idf_test.append(padded_query_idfs.get(query_id))
             emb_test.append(padded_query_embs.get(query_id))
+        saver.restore(session, "models/model.ckpt")
         start_time = time.time()
         print("=== TESTING ===")
         predictions = session.run([model.sims], feed_dict={model.matching_histograms: hist_test, model.queries_idf: idf_test, model.queries_embeddings: emb_test})

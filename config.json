@@ -8,5 +8,6 @@
   "batch_size": 20,
   "num_epochs": 10,
   "conf": "_stopwords_stemmed",
-  "emb_size": 300
+  "emb_size": 300,
+  "min_delta": 0.001
 }
