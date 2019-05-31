@@ -14,7 +14,6 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 class Query:
     """
     Query class representation (topic id, title, description)
@@ -321,14 +320,18 @@ def score_to_text_run(scores, ids, config):
     """
     zipped = list(zip(ids, scores))
     filtered = []
-    for id_t in set([m[0] for m in zipped]):  # take set of ids in case of repetition
+    for _, group in groupby(sorted(zipped, key=lambda x: x[0]), key=lambda x: x[0]):
+        g = list(group)
+        # print(g)
+        filtered.append(g[-1])
+    '''for id_t in set([m[0] for m in zipped]):  # take set of ids in case of repetition
         lst = [m for m in zipped if m[0] == id_t]
         if len(lst) > 0:
-            filtered.append(lst[0])
+            filtered.append(lst[0])'''
     text = ""
-    for key, group in groupby(sorted(filtered, key=lambda x: x[0][0]), lambda x: x[0][0]):  # sort and group by topic
+    for key, group in groupby(sorted(filtered, key=lambda x: x[0][0]), key=lambda x: x[0][0]):  # sort and group by topic
         i = 0
-        for pair in sorted(group, key=lambda x: x[1], reverse=True):  # sort score desc
+        for pair in sorted(group, key=lambda x: x[1], reverse=True)[:1000]:  # sort score desc
             topic_id, document_id = pair[0][0], pair[0][1]
             text += topic_id + " Q0 " + document_id + " " + str(i) + " " + str(pair[1]) + " DRMM_RUN_" + config + "\n"
             i += 1
@@ -337,9 +340,9 @@ def score_to_text_run(scores, ids, config):
 
 def get_metrics_run(filename, qrels_path, test):
     """
-    :param filename:
-    :param qrels_path:
-    :return:
+    :param filename: name of run file
+    :param qrels_path: path to qrels
+    :return: map, p@20, nDCG@20 of the given run
     """
     result = subprocess.run("trec_eval.9.0.4/trec_eval -m map -m P -m ndcg_cut -m iprec_at_recall " + qrels_path + " " + filename,
                             shell=True, stdout=subprocess.PIPE)
@@ -422,7 +425,7 @@ def make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_
     styles = ['-.', '--']
     lines = [Line2D([0], [0], color=colors[i], linewidth=3, linestyle=styles[i]) for i in range(2)]
     labels = ['training', 'validation']
-    fig.legend(lines, labels, loc="lower center", bbox_to_anchor=(0.5, 1.05))
+    fig.legend(lines, labels, loc="lower center", bbox_to_anchor=(0.5, -0.05), ncol=2, shadow=True)
     plt.tight_layout()
     plt.savefig("plot_metrics/loss_fold_" + str(k), bbox_inches="tight")
     plt.clf()

@@ -16,15 +16,15 @@ stopwords = data["stopwords"]
 stemmed = data["stemmed"]
 histograms_mode = data["hist_mode"]
 min_delta = data["min_delta"]
+patience = data["patience"]
 
-SEED = 42
 num_layers = 3
 units = [30, 5, 1]
 activation_functions = ["tanh"] * num_layers
 num_bins = 30
 batch_size = data["batch_size"]
 emb_size = 300
-learning_rate = 1e-2
+learning_rate = 1e-3
 
 gating_function = data["gating_function"]
 num_epochs = data["num_epochs"]
@@ -53,19 +53,20 @@ all_map_test = []
 all_p20_test = []
 all_ndcg20_test = []
 all_prec_rec_test = []
-best_val_loss = math.inf
-saver = tf.train.Saver()
 for k in range(5):
     ids_train_fold = ids_train[k]  # do NOT shuffle (see loss function)
     ids_val_fold = ids_validation[k]
     ids_test_fold = ids_test[k]
+    best_val_map = - math.inf
+    count_patience = 0
     with tf.Session() as session:
         tf.random.set_random_seed(SEED)
 
         model = DRMM(num_layers, units, activation_functions, max_query_len, num_bins, emb_size, gating_function, SEED,
                      learning_rate)
+        saver = tf.train.Saver()
         session.run(tf.global_variables_initializer())
-        steps = len(ids_val_fold) - batch_size
+        steps = len(ids_train_fold) - batch_size
         print("Number of steps per epoch:", int(steps/batch_size))
         all_losses_train = []
         all_map_train = []
@@ -138,13 +139,9 @@ for k in range(5):
             print('Epoch %s' % epoch)
             print('train_loss=%2.4f, time=%4.4fs' % (epoch_train_loss, time.time() - start_time))
             print('val_loss=%2.4f, time=%4.4fs' % (epoch_val_loss, time.time() - start_time))
-            if best_val_loss - epoch_val_loss < min_delta:  # early stopping
-                break
-            if epoch_val_loss < best_val_loss:  # save model with best validation loss
-                best_val_loss = epoch_val_loss
-                save_path = saver.save(session, "models/model.ckpt")
             all_losses_train.append(epoch_train_loss)
             all_losses_val.append(epoch_val_loss)
+            start_time = time.time()
             train_epoch_run_text = score_to_text_run(sims_train_epoch, ids_train_fold, "sw_st_idf_lch")
             val_epoch_run_text = score_to_text_run(sims_val_epoch, ids_val_fold, "sw_st_idf_lch")
             with open("run_results/training/train_epoch_run_" + str(k) + ".txt", 'w') as file:
@@ -153,10 +150,20 @@ for k in range(5):
                 file.write(val_epoch_run_text)
             map_train, p20_train, ndcg20_train = get_metrics_run("run_results/training/train_epoch_run_" + str(k) +
                                                                  ".txt", qrels_path, False)
+            print('train map=%2.4f, p@20=%2.4f, ndcg@20=%2.4f, time=%4.4fs' % (map_train, p20_train, ndcg20_train, time.time() - start_time))
             map_val, p20_val, ndcg20_val = get_metrics_run("run_results/validation/val_epoch_run_" + str(k) +
                                                            ".txt", qrels_path, False)
-            print("train_metrics", map_train, p20_train, ndcg20_train)
-            print("val_metrics", map_val, p20_val, ndcg20_val)
+            print('val map=%2.4f, p@20=%2.4f, ndcg@20=%2.4f, time=%4.4fs' % (map_val, p20_val, ndcg20_val, time.time() - start_time))
+            if map_val - best_val_map < min_delta:  # early stopping
+                if count_patience < patience:
+                    count_patience += 1
+                else:
+                    print("early stopping: restoring model with best map!")
+                    saver.restore(session, "models/model.ckpt")
+                    break
+            if map_val > best_val_map:  # save model with best validation map
+                best_val_map = map_val
+                save_path = saver.save(session, "models/model.ckpt")
             all_map_train.append(map_train)
             all_p20_train.append(p20_train)
             all_ndcg20_train.append(ndcg20_train)
@@ -179,7 +186,6 @@ for k in range(5):
             hist_test.append(hist)
             idf_test.append(padded_query_idfs.get(query_id))
             emb_test.append(padded_query_embs.get(query_id))
-        saver.restore(session, "models/model.ckpt")
         start_time = time.time()
         print("=== TESTING ===")
         predictions = session.run([model.sims], feed_dict={model.matching_histograms: hist_test, model.queries_idf: idf_test, model.queries_embeddings: emb_test})

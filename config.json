@@ -5,9 +5,10 @@
   "use_glove": false,
   "gating_function": "idf",
   "seed": 42,
-  "batch_size": 20,
-  "num_epochs": 10,
+  "batch_size": 32,
+  "num_epochs": 20,
   "conf": "_stopwords_stemmed",
   "emb_size": 300,
-  "min_delta": 0.001
+  "min_delta": 0.001,
+  "patience": 5
 }

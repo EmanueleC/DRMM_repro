@@ -7,9 +7,9 @@ labels_train_filename = "preprocessing/pre_data/ids/ids_train"
 labels_validation_filename = "preprocessing/pre_data/ids/ids_validation"
 labels_test_filename = "preprocessing/pre_data/ids/ids_test"
 
-n_pos = 100
-n_neg = 100
-n_val = 150
+n_pos = 50
+n_neg = 50
+n_val = 100
 k = 5  # for k-fold cross validation
 random.seed(42)
 
@@ -37,15 +37,15 @@ def prepare_train_validation_ids(qrels, topics_train):
                 neg_train.append(random.choice(nonrels))
                 i += 1
 
-            ids_train = [x for x in itertools.chain.from_iterable(itertools.zip_longest(pos_train, neg_train)) if x]
+            ids_train += [x for x in itertools.chain.from_iterable(itertools.zip_longest(pos_train, neg_train)) if x]
 
             while j < n_val:
                 ids_validation.append(random.choice(rels))
                 ids_validation.append(random.choice(nonrels))
                 j += 2
 
-    #("len training labels", len(ids_train))
-    #print("len validation labels", len(ids_validation))
+    print("len training labels", len(ids_train))
+    print("len validation labels", len(ids_validation))
     return ids_train, ids_validation
 
 
