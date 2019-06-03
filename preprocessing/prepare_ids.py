@@ -7,9 +7,9 @@ labels_train_filename = "preprocessing/pre_data/ids/ids_train"
 labels_validation_filename = "preprocessing/pre_data/ids/ids_validation"
 labels_test_filename = "preprocessing/pre_data/ids/ids_test"
 
-n_pos = 50
-n_neg = 50
-n_val = 100
+n_pos = 100
+n_neg = 100
+n_val = 500
 k = 5  # for k-fold cross validation
 random.seed(42)
 

@@ -10,5 +10,5 @@
   "conf": "_stopwords_stemmed",
   "emb_size": 300,
   "min_delta": 0.001,
-  "patience": 5
+  "patience": 10
 }

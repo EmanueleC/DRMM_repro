@@ -5,7 +5,7 @@
   "use_glove": false,
   "gating_function": "idf",
   "seed": 42,
-  "batch_size": 20,
+  "batch_size": 32,
   "num_epochs": 15,
   "conf": "_stopwords_stemmed",
   "emb_size": 300,
