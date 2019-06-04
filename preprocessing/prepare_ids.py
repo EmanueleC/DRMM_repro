@@ -2,16 +2,21 @@ from utilities.utilities import load_from_pickle_file, save_to_pickle_file
 from tqdm import tqdm
 import random
 import itertools
+import json
 
 labels_train_filename = "preprocessing/pre_data/ids/ids_train"
 labels_validation_filename = "preprocessing/pre_data/ids/ids_validation"
 labels_test_filename = "preprocessing/pre_data/ids/ids_test"
 
-n_pos = 100
-n_neg = 100
-n_val = 500
+with open('config.json') as config_file:
+    data = json.load(config_file)
+
+n_pos = data["pos"]
+n_neg = data["neg"]
+n_val = data["val"]
 k = 5  # for k-fold cross validation
-random.seed(42)
+
+random.seed(data["seed"])
 
 
 def prepare_train_validation_ids(qrels, topics_train):
@@ -43,6 +48,8 @@ def prepare_train_validation_ids(qrels, topics_train):
                 ids_validation.append(random.choice(rels))
                 ids_validation.append(random.choice(nonrels))
                 j += 2
+        else:
+            print("Topic empty qrels:", topic)
 
     print("len training labels", len(ids_train))
     print("len validation labels", len(ids_validation))
@@ -54,7 +61,7 @@ def prepare_test_ids(qrels, topics_test):
     for topic in topics_test:
         pairs = qrels.get_pairs_topic(str(topic))
         ids_test.update(pairs)
-    # print("len test labels", len(ids_test.keys()))
+    print("len test labels", len(ids_test.keys()))
     return list(ids_test.keys())
 
 

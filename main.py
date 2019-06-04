@@ -57,6 +57,9 @@ for k in range(5):
     ids_train_fold = ids_train[k]  # do NOT shuffle (see loss function)
     ids_val_fold = ids_validation[k]
     ids_test_fold = ids_test[k]
+    print("len train fold:", len(ids_train_fold))
+    print("len val fold:", len(ids_val_fold))
+    print("len test fold:", len(ids_test_fold))
     best_val_loss = math.inf
     count_patience = 0
     with tf.Session() as session:

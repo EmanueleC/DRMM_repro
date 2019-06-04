@@ -44,8 +44,8 @@ text = ""
 text += "Total documents: " + str(len(corpus_obj.docs.keys()))
 text += "\nTotal queries: " + str(len(queries_obj.keys()))
 
-lines_corpus_splitted = [len(line) for line in corpus_obj]
-lines_queries_splitted = [len(line.split()) for query in queries_obj.values() for line in query.get_lines()]
+lines_corpus_splitted = [len(set(line)) for line in corpus_obj]
+lines_queries_splitted = [len(set(line.split())) for query in queries_obj.values() for line in query.get_lines()]
 
 max_lines_queries = max([len(query.get_lines()) for query in queries_obj.values()])
 max_lines_docs = max([len(doc.get_lines()) for doc in corpus_obj.docs.values()])

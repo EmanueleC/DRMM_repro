@@ -14,6 +14,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 class Query:
     """
     Query class representation (topic id, title, description)
@@ -425,8 +426,8 @@ def make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_
     styles = ['-.', '--']
     lines = [Line2D([0], [0], color=colors[i], linewidth=3, linestyle=styles[i]) for i in range(2)]
     labels = ['training', 'validation']
-    fig.legend(lines, labels, loc="lower center", ncol=2, shadow=True)  # bbox_to_anchor=(0.5, -0.05), ncol=2, shadow=True
-    plt.tight_layout()
+    fig.legend(lines, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 0.05), shadow=True)
+    plt.tight_layout(pad=1.0)
     plt.savefig("plot_metrics/loss_fold_" + str(k), bbox_inches="tight")
     plt.clf()
 

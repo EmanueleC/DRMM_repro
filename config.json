@@ -1,14 +1,17 @@
 {
-  "stopwords": true,
-  "stemmed": true,
+  "stopwords": false,
+  "stemmed": false,
   "hist_mode": "lch",
   "use_glove": false,
   "gating_function": "idf",
   "seed": 42,
-  "batch_size": 32,
-  "num_epochs": 20,
-  "conf": "_stopwords_stemmed",
+  "batch_size": 20,
+  "num_epochs": 10,
+  "conf": "",
   "emb_size": 300,
   "min_delta": 0.001,
-  "patience": 10
+  "patience": 10,
+  "pos": 30,
+  "neg": 30,
+  "val": 50
 }

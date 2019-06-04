@@ -6,9 +6,9 @@
   "gating_function": "idf",
   "seed": 42,
   "batch_size": 32,
-  "num_epochs": 15,
+  "num_epochs": 20,
   "conf": "_stopwords_stemmed",
   "emb_size": 300,
   "min_delta": 0.001,
-  "patience": 5
+  "patience": 10
 }
