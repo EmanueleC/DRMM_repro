@@ -5,7 +5,6 @@ import itertools
 import json
 
 labels_train_filename = "preprocessing/pre_data/ids/ids_train"
-labels_validation_filename = "preprocessing/pre_data/ids/ids_validation"
 labels_test_filename = "preprocessing/pre_data/ids/ids_test"
 
 with open('config.json') as config_file:
@@ -13,16 +12,15 @@ with open('config.json') as config_file:
 
 n_pos = data["pos"]
 n_neg = data["neg"]
-n_val = data["val"]
 k = 5  # for k-fold cross validation
+retrieval_alg = data["retrieval_alg"]
 
 random.seed(data["seed"])
 
 
-def prepare_train_validation_ids(qrels, topics_train):
+def prepare_train_ids(qrels, topics_train, n_pos, n_neg):
 
     ids_train = []
-    ids_validation = []
     for topic in tqdm(topics_train):
         rels = list(qrels.get_relevant_docs(str(topic)).keys())
         nonrels = list(qrels.get_non_relevant_docs(str(topic)).keys())
@@ -31,7 +29,6 @@ def prepare_train_validation_ids(qrels, topics_train):
         # possible repetition
         if len(rels) > 0 and len(nonrels) > 0:
             i = 0
-            j = 0
 
             while i < n_pos:
                 pos_train.append(random.choice(rels))
@@ -43,17 +40,11 @@ def prepare_train_validation_ids(qrels, topics_train):
                 i += 1
 
             ids_train += [x for x in itertools.chain.from_iterable(itertools.zip_longest(pos_train, neg_train)) if x]
-
-            while j < n_val:
-                ids_validation.append(random.choice(rels))
-                ids_validation.append(random.choice(nonrels))
-                j += 2
         else:
             print("Topic empty qrels:", topic)
 
     print("len training labels", len(ids_train))
-    print("len validation labels", len(ids_validation))
-    return ids_train, ids_validation
+    return ids_train
 
 
 def prepare_test_ids(qrels, topics_test):
@@ -67,7 +58,7 @@ def prepare_test_ids(qrels, topics_test):
 
 if __name__ == "__main__":
 
-    qrels_filename = "preranked/preranked_total"
+    qrels_filename = "preranked/preranked_total_" + retrieval_alg
 
     qrels = load_from_pickle_file(qrels_filename)
 
@@ -75,18 +66,15 @@ if __name__ == "__main__":
     random.shuffle(topics)
 
     cleared_ids_train = []
-    cleared_ids_validation = []
     cleared_ids_test = []
 
     for i in range(k):
         topic_test = topics[i*50:(i+1)*50]
         topic_train = [topic for topic in topics if topic not in topic_test]
-        ids_train, ids_validation = prepare_train_validation_ids(qrels, topic_train)
+        ids_train = prepare_train_ids(qrels, topic_train, n_pos, n_neg)
         ids_test = prepare_test_ids(qrels, topic_test)
         cleared_ids_train.append(ids_train)
-        cleared_ids_validation.append(ids_validation)
         cleared_ids_test.append(ids_test)
 
-    save_to_pickle_file("preprocessing/encoded_data/ids/cleared_ids_train", cleared_ids_train)
-    save_to_pickle_file("preprocessing/encoded_data/ids/cleared_ids_validation", cleared_ids_validation)
-    save_to_pickle_file("preprocessing/encoded_data/ids/cleared_ids_test", cleared_ids_test)
+    save_to_pickle_file("preprocessing/encoded_data/ids/cleared_ids_train_" + retrieval_alg + "_" + str(n_pos) + "_" + str(n_neg), cleared_ids_train)
+    save_to_pickle_file("preprocessing/encoded_data/ids/cleared_ids_test_" + retrieval_alg, cleared_ids_test)

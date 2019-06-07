@@ -299,17 +299,15 @@ def save_to_pickle_file(filename, obj):
     outfile.close()
 
 
-def load_ids():
+def load_ids(retrieval_alg, n_pos, n_neg):
     """
     :return: List of 5 lists each (one per each fold) - training, validation and testing ids
     """
-    labels_train_filename = "preprocessing/encoded_data/ids/cleared_ids_train"
-    labels_validation_filename = "preprocessing/encoded_data/ids/cleared_ids_validation"
-    labels_test_filename = "preprocessing/encoded_data/ids/cleared_ids_test"
+    labels_train_filename = "preprocessing/encoded_data/ids/cleared_ids_train_" + retrieval_alg + "_" + str(n_pos) + "_" + str(n_neg)
+    labels_test_filename = "preprocessing/encoded_data/ids/cleared_ids_test_" + retrieval_alg
     ids_train = load_from_pickle_file(labels_train_filename)
-    ids_validation = load_from_pickle_file(labels_validation_filename)
     ids_test = load_from_pickle_file(labels_test_filename)
-    return ids_train, ids_validation, ids_test
+    return ids_train, ids_test
 
 
 def score_to_text_run(scores, ids, config):
@@ -408,11 +406,10 @@ def load_all_data(stopwords, stemmed):
     return corpus_obj, queries_obj, qrels_obj, queries_model, corpus_model
 
 
-def make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_train, all_losses_val, all_map_val, all_p20_val, all_ndcg20_val, k):
+def make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_train, all_map_val, all_p20_val, all_ndcg20_val, k):
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
     ax1.set_title("Loss")
     ax1.plot(all_losses_train, 'r.-')
-    ax1.plot(all_losses_val, 'r.--')
     ax2.set_title("Map")
     ax2.plot(all_map_train, 'k.-')
     ax2.plot(all_map_val, 'k.--')

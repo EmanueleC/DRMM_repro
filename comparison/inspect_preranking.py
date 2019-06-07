@@ -1,28 +1,43 @@
+from utilities.utilities import load_from_pickle_file
+from tqdm import tqdm
+import math
+import json
 import matplotlib.pyplot as plt
 
-retrieval_alg = "QL"
+with open('config.json') as config_file:
+    data = json.load(config_file)
 
-preranked_filename = "comparison/terrier_preranked/DirichletLM_6.res"
+retrieval_alg = data["retrieval_alg"]
 
-indexes = {}
+qrels_filename = "preranked/preranked_total_" + retrieval_alg
 
-""" create runs objects from galago batch-search output """
-with open(preranked_filename, 'r') as results:
-    runsList = (line.split() for line in results)
+qrels = load_from_pickle_file(qrels_filename)
 
-    for line in runsList:
-        if line[0] in indexes.keys():
-            indexes[line[0]] = indexes[line[0]] + 1
-        else:
-            indexes[line[0]] = 0
+topics = list(range(301, 451)) + list(range(601, 701))
 
-print(indexes)
-freq = [x for x in indexes.values() if x < 1999]
-topics = [key for key in indexes.keys() if indexes[key] < 1999]
-plt.bar(topics, freq)
-plt.xticks(rotation='90')
-plt.title("# Documents retrieved per topics (freq < 2000) with " + retrieval_alg + " algorithm")
+topic_freq_pos = []
+topic_freq_neg = []
+pos = []
+neg = []
+
+x = list(map(str, list(range(301, 451)) + list(range(601, 701))))
+
+for topic in tqdm(x):
+    topic_freq_pos.append(math.log(len(qrels.get_relevant_docs(topic).keys()) + 1))
+    pos.append((len(qrels.get_relevant_docs(topic).keys())*100)/len(qrels.get_pairs_topic(topic)))
+    topic_freq_neg.append(math.log(len(qrels.get_non_relevant_docs(topic).keys()) + 1))
+    neg.append((len(qrels.get_non_relevant_docs(topic).keys())*100)/len(qrels.get_pairs_topic(topic)))
+
+p1 = plt.stackplot(x, topic_freq_pos, topic_freq_neg, labels=["Positive documents", "Negative documents"])
+
+plt.legend(loc="best")
+plt.xticks(x[::20], rotation='90')
+plt.title("# (Logs) Documents retrieved per topics with " + retrieval_alg + " algorithm")
 plt.xlabel('Topics IDs')
 plt.ylabel('# documents retrieved')
 plt.savefig("comparison/queries_frequencies" + retrieval_alg + ".png")
+print("avg pos:", sum(pos) / len(pos))
+print("avg neg:", sum(neg) / len(neg))
+print("min pos:", min(pos), "max pos:", max(pos))
+print("min neg:", min(neg), "max neg:", max(neg))
 plt.close()

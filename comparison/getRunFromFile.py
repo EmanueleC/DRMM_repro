@@ -1,6 +1,7 @@
 from utilities.utilities import Qrels, load_from_pickle_file
 from tqdm import tqdm
 import pickle
+import json
 
 qrels_file = open('preprocessing/pre_data/Qrels/Qrels_cleaned', 'rb')
 qrels_obj = pickle.load(qrels_file)
@@ -12,9 +13,15 @@ queries_obj = load_from_pickle_file('preprocessing/pre_data/Queries/Queries')
 
 num_topics = len(queries_obj)
 
-retrieval_alg = "QL"
+with open('config.json') as config_file:
+    data = json.load(config_file)
 
-preranked_filename = "comparison/terrier_preranked/DirichletLM_6.res"
+retrieval_alg = data["retrieval_alg"]
+
+if retrieval_alg == "QL":
+    preranked_filename = "comparison/terrier_preranked/DirichletLM_6.res"
+elif retrieval_alg == "Bm25":
+    preranked_filename = "comparison/terrier_preranked/BM25b0.75_5.res"
 
 """ create runs objects from galago batch-search output """
 with open(preranked_filename, 'r') as results:
@@ -45,13 +52,16 @@ with open(preranked_filename, 'r') as results:
             except StopIteration:
                 line = "0"
         if len(scores) > 0:
+            print(topic_id, len(scores))
             count = len(list(ranklist.keys()))
             sum = sum + count
             print(topic_id, count)
             runs[topic_id] = ranklist
+        else:
+            print(topic_id, len(scores))
     print(sum)
 
-    file_preranked = open("preranked/preranked.txt", "w")
+    file_preranked = open("preranked/preranked_" + retrieval_alg + ".txt", "w")
 
     preranked_total = Qrels()
     text = ""
@@ -63,5 +73,5 @@ with open(preranked_filename, 'r') as results:
             i = i + 1
     file_preranked.write(text)
 
-    with open("preranked/preranked_total", 'wb') as pickle_file:
+    with open("preranked/preranked_total_" + retrieval_alg, 'wb') as pickle_file:
         pickle.dump(preranked_total, pickle_file)
