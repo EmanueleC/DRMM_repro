@@ -104,8 +104,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
                     if count_patience < patience:
                         count_patience += 1
                     else:
-                        print("early stopping: restoring model with best map!")
-                        saver.restore(session, "models/model.ckpt")
+                        print("stopping training: no improvements!")
                         break
                 if map_val > best_val_map:  # save model with best validation map
                     best_val_map = map_val
@@ -133,6 +132,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
                 emb_test.append(padded_query_embs.get(query_id))
             start_time = time.time()
             print("=== TESTING ===")
+            saver.restore(session, "models/model.ckpt")
             predictions = session.run([model.sims], feed_dict={model.matching_histograms: hist_test,
                                                                model.queries_idf: idf_test,
                                                                model.queries_embeddings: emb_test})
@@ -179,7 +179,7 @@ activation_functions = ["tanh"] * num_layers
 num_bins = 30
 # batch_size = data["batch_size"]
 emb_size = 300
-learning_rate = 1e-2
+learning_rate = data["learning_rate"]
 
 gating_function = data["gating_function"]
 # num_epochs = data["num_epochs"]
@@ -205,13 +205,13 @@ print("max query len:", max_query_len)
 matching_histograms = MatchingHistograms(num_bins, max_query_len)
 
 f = open("parameter-tuning.txt", "a+")
-num_epoch = 20
-batch_sizes = [16, 32, 64]
-samples = [(80, 70), (30, 30)]
-for batch_size in batch_sizes:
-    for sample in samples:
-        ids_train, ids_test = load_ids(retrieval_alg, sample[0], sample[1])
-        text = "\nbatch_size: " + str(batch_size) + "\nEsempi: " + str(sample) + "\nAVERAGE MAP IN FOLDS: " + str(cross_validation(5, num_epoch, batch_size, ids_train, ids_test))
-        print(text)
-        f.write(text)
+
+for conf in [(20, 20, (30, 30)), (20, 16, (50, 50))]:
+    sample = conf[2]
+    num_epoch = conf[0]
+    batch_size = conf[1]
+    ids_train, ids_test = load_ids(retrieval_alg, sample[0], sample[1])
+    text = "\nepochs: " + str(num_epoch) + "\nbatch_size: " + str(batch_size) + "\nEsempi: " + str(sample) + "\nAVERAGE MAP IN FOLDS: " + str(cross_validation(5, num_epoch, batch_size, ids_train, ids_test))
+    print(text)
+    f.write(text)
 f.close()

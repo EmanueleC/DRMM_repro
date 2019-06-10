@@ -1,4 +1,7 @@
 from utilities.utilities import load_from_pickle_file, save_to_pickle_file
+from sklearn.feature_extraction.text import TfidfVectorizer
+from itertools import chain
+from tqdm import tqdm
 import json
 
 with open('config.json') as config_file:
@@ -14,13 +17,11 @@ queries_filename = "preprocessing/pre_data/Queries/Queries" + conf
 corpus_obj = load_from_pickle_file(corpus_filename)
 queries_obj = load_from_pickle_file(queries_filename)
 
-words = set()
-for topic_id, topic in sorted(queries_obj.items()):
-    words.update(topic.get_text().split())
+tfidf = TfidfVectorizer()
+tfidf.fit(chain((doc.get_text() for doc in tqdm(corpus_obj.docs.values())), (query.get_text() for query in queries_obj.values())))
+idfs = dict(zip(tfidf.get_feature_names(), tfidf.idf_))
 
-idfs = corpus_obj.calculate_idf(words)
-
-assert len(words) == len(idfs.keys())
+# assert len(words) == len(idfs.keys())
 
 idf_filename = "preprocessing/pre_data/idfs/idfs" + conf
 

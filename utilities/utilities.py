@@ -1,13 +1,10 @@
 from itertools import groupby
 from typing import Optional, List, Dict, Tuple
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from krovetzstemmer import Stemmer
 from numba import jit
 from gensim.models import Word2Vec
-from matplotlib.lines import Line2D
 import pickle
 import subprocess
-import math
 import re
 import html
 import logging
@@ -115,21 +112,6 @@ class Corpus:
     def __iter__(self) -> str:
         for doc in self.docs.values():
             yield doc.get_text().split()
-
-    def calculate_idf(self, words: List[str]):
-        cv = CountVectorizer()
-        word_count_vector = cv.fit_transform((doc.get_text() for doc in self.docs.values()))
-        tfidf_transformer = TfidfTransformer(smooth_idf=True, use_idf=True)
-        tfidf_transformer.fit(word_count_vector)
-        feature_names = cv.get_feature_names()
-        idfs = {}
-        for word in words:
-            if word in feature_names:
-                index = feature_names.index(word)
-                idfs[word] = tfidf_transformer.idf_[index]
-            else:
-                idfs[word] = math.log(len(self.docs))
-        return idfs
 
 
 class Qrels:
@@ -386,7 +368,7 @@ def load_models_w2v(queries_model_filename, corpus_model_filename):
     return query_model, corpus_model
 
 
-def load_all_data(stopwords, stemmed):
+def load_all_data(stopwords, stemmed, retrieval_alg):
     conf = ""
     if stopwords:
         conf = conf + "_stopwords"
@@ -395,7 +377,7 @@ def load_all_data(stopwords, stemmed):
 
     corpus_filename = "preprocessing/pre_data/Corpus/Corpus" + conf
     queries_filename = "preprocessing/pre_data/Queries/Queries" + conf
-    qrels_filename = "preranked/preranked_total"
+    qrels_filename = "preranked/preranked_total_" + retrieval_alg
     corpus_model_filename = "preprocessing/pre_data/models/corpus_model" + conf + ".bin"
     queries_model_filename = "preprocessing/pre_data/models/queries_model" + conf + ".bin"
 
@@ -408,24 +390,26 @@ def load_all_data(stopwords, stemmed):
 
 def make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_train, all_map_val, all_p20_val, all_ndcg20_val, k):
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
-    ax1.set_title("Loss")
+    ax1.set_title("Training loss")
     ax1.plot(all_losses_train, 'r.-')
-    ax2.set_title("Map")
+    ax2.set_title("Training map")
     ax2.plot(all_map_train, 'k.-')
-    ax2.plot(all_map_val, 'k.--')
-    ax3.set_title("Prec@20")
+    ax3.set_title("Training prec@20")
     ax3.plot(all_p20_train, 'b.-')
-    ax3.plot(all_p20_val, 'b.--')
-    ax4.set_title("nDCG@20")
+    ax4.set_title("Training nDCG@20")
     ax4.plot(all_ndcg20_train, 'g.-')
-    ax4.plot(all_ndcg20_val, 'g.--')
-    colors = ['grey', 'grey']
-    styles = ['-.', '--']
-    lines = [Line2D([0], [0], color=colors[i], linewidth=3, linestyle=styles[i]) for i in range(2)]
-    labels = ['training', 'validation']
-    fig.legend(lines, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 0.05), shadow=True)
-    plt.tight_layout(pad=1.0)
-    plt.savefig("plot_metrics/loss_fold_" + str(k), bbox_inches="tight")
+    plt.tight_layout()
+    plt.savefig("plot_metrics/train_fold_" + str(k), bbox_inches="tight")
+    plt.clf()
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    ax1.set_title("Validation map")
+    ax1.plot(all_map_val, 'k.--')
+    ax2.set_title("Validation prec@20")
+    ax2.plot(all_p20_val, 'b.--')
+    ax3.set_title("Validation ndcg@20")
+    ax3.plot(all_ndcg20_val, 'g.--')
+    plt.tight_layout()
+    plt.savefig("plot_metrics/val_fold_" + str(k), bbox_inches="tight")
     plt.clf()
 
 

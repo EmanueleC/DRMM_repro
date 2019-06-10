@@ -56,8 +56,9 @@ stopwords = data["stopwords"]
 stemmed = data["stemmed"]
 glv = data["use_glove"]
 conf = data["conf"]
+retrieval_alg = data["retrieval_alg"]
 
-corpus_obj, queries_obj, qrels, _, model = load_all_data(stopwords, stemmed)
+corpus_obj, queries_obj, qrels, _, model = load_all_data(stopwords, stemmed, retrieval_alg)
 if glv:
     model = load_glove_model("data/glove.6B.300d.txt")
 

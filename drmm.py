@@ -18,6 +18,7 @@ class DRMM():
                                                kernel_initializer=tf.glorot_uniform_initializer(seed=self.SEED)))
         self.sims = self.compute_scores()
         self.loss = tf.reduce_mean(tf.maximum(0.0, 1 - self.sims[::2] + self.sims[1::2]))
+        # self.optimizer = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss, name="train_opt")
         self.optimizer = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss, name="train_opt")
 
     def compute_scores(self):
@@ -25,7 +26,7 @@ class DRMM():
         hist_hidden_repr = tf.reshape(hist_hidden_repr, shape=(-1, self.max_query_len))
         if self.gating_function == "idf":
             out_gate = self.compute_term_gating_idf(hist_hidden_repr)
-        else:
+        elif self.gating_function == "emb":
             out_gate = self.compute_term_gating_emb(hist_hidden_repr)
         last_op = tf.reduce_sum(out_gate, axis=-1)  # sum last dimension
         return last_op
@@ -44,4 +45,5 @@ class DRMM():
     def compute_term_gating_emb(self, hist_hidden_repr):
         queries_emb_hidden_repr = tf.layers.Dense(units=1, activation="softmax",
                                                   kernel_initializer=tf.glorot_uniform_initializer(seed=self.SEED))(self.queries_embeddings)
+        queries_emb_hidden_repr = tf.squeeze(queries_emb_hidden_repr)
         return tf.multiply(queries_emb_hidden_repr, hist_hidden_repr)
