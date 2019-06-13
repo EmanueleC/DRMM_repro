@@ -1,7 +1,9 @@
 from utilities.utilities import load_all_data, load_glove_model
 from preprocessing.prepare_ids import *
 from tqdm import tqdm
+import math
 import json
+from gensim.models import KeyedVectors
 
 
 def create_dict(use_glove):
@@ -28,7 +30,7 @@ def encode_oov(text, word_dict):
     return [word for word in text.split() if word not in word_dict]
 
 
-def encode_we(word_dict, use_glove):
+def encode_we(model, word_dict, use_glove):
     print("Encoding word embeddings")
     we = {}
     dct = model
@@ -83,6 +85,7 @@ print("Encoding queries")
 
 for query_id, query in tqdm(queries_obj.items()):
     encoded_queries[query_id] = encode(query.title, word_dict)
+    print(query.title, encoded_queries[query_id])
     encoded_queries_oov[query_id] = encode_oov(query.title, word_dict)
 
 idf_filename = "preprocessing/pre_data/idfs/idfs" + conf
@@ -90,7 +93,13 @@ idfs = load_from_pickle_file(idf_filename)
 
 idfs = encode_idf(idfs, word_dict)
 
-we = encode_we(word_dict, glv)
+outv = KeyedVectors(300)
+outv.vocab = model.wv.vocab  # same
+outv.index2word = model.wv.index2word  # same
+outv.syn0 = model.syn1neg  # different
+
+we = encode_we(model, word_dict, glv)
+we_out = encode_we(outv, word_dict, glv)
 
 max_query_len = max([len(q.title.split()) for q in queries_obj.values()])
 
@@ -103,9 +112,15 @@ for query_id, query in tqdm(encoded_queries.items()):  # padding queries idfs an
     padded_query_idfs[query_id] = []
     padded_query_embs[query_id] = []
     for query_term in query:
-        padded_query_idfs[query_id].append(idfs[query_term])
+        idf = idfs.get(query_term)
+        if idf is not None:
+            padded_query_idfs[query_id].append(idfs[query_term])
+        else:
+            # padded_query_idfs[query_id].append(math.log(len(corpus_obj.docs) + 250))
+            padded_query_idfs[query_id].append(0.0)
         padded_query_embs[query_id].append(we[query_term])
     for _ in range(max_query_len - len(query)):
+        # padded_query_idfs[query_id].append(math.log(len(corpus_obj.docs) + 250))
         padded_query_idfs[query_id].append(0.0)
         padded_query_embs[query_id].append([0] * 300)
 
@@ -116,5 +131,6 @@ save_to_pickle_file("preprocessing/encoded_data/Corpus/Corpus_encoded_oov" + con
 save_to_pickle_file("preprocessing/encoded_data/Queries/Queries_encoded_oov" + conf, encoded_queries_oov)
 save_to_pickle_file("preprocessing/encoded_data/preranked/preranked_total", qrels.ground_truth)
 save_to_pickle_file("preprocessing/encoded_data/embeddings/word_embeddings" + conf, we)
+save_to_pickle_file("preprocessing/encoded_data/embeddings/word_embeddings_out" + conf, we_out)
 save_to_pickle_file("preprocessing/encoded_data/idfs/padded_query_idfs" + conf, padded_query_idfs)
 save_to_pickle_file("preprocessing/encoded_data/embeddings/padded_query_embs" + conf, padded_query_embs)

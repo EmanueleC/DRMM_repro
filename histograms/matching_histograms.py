@@ -26,7 +26,7 @@ class MatchingHistograms:
         self.num_bins = num_bins
         self.max_query_len = max_query_len
 
-    def make_histogram(self, query_term, doc, corpus_model):
+    def make_histogram(self, query_term, doc, corpus_model, outv):
         matching_histogram = [0] * self.num_bins
         qtv = corpus_model[query_term]
         for doc_term in doc:
@@ -34,10 +34,10 @@ class MatchingHistograms:
             matching_histogram[index] = matching_histogram[index] + 1
         return matching_histogram
 
-    def get_histograms(self, query, document, corpus_model, oov_query, oov_document, histograms_mode):
+    def get_histograms(self, query, document, corpus_model, outv, oov_query, oov_document, histograms_mode):
         histograms = []
         for query_term in query:
-            histogram = self.make_histogram(query_term, document, corpus_model)
+            histogram = self.make_histogram(query_term, document, corpus_model, outv)
             histograms.append(histogram)
         for query_term in oov_query:
             matching_histogram = [0] * self.num_bins

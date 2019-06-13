@@ -18,8 +18,8 @@ class DRMM():
                                                kernel_initializer=tf.glorot_uniform_initializer(seed=self.SEED)))
         self.sims = self.compute_scores()
         self.loss = tf.reduce_mean(tf.maximum(0.0, 1 - self.sims[::2] + self.sims[1::2]))
-        # self.optimizer = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss, name="train_opt")
         self.optimizer = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss, name="train_opt")
+        # self.optimizer = tf.train.AdamOptimizer().minimize(self.loss, name="train_opt")
 
     def compute_scores(self):
         hist_hidden_repr = self.compute_hist_hidden_repr(self.matching_histograms)

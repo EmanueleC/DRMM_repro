@@ -18,7 +18,7 @@ corpus_obj = load_from_pickle_file(corpus_filename)
 queries_obj = load_from_pickle_file(queries_filename)
 
 tfidf = TfidfVectorizer()
-tfidf.fit(chain((doc.get_text() for doc in tqdm(corpus_obj.docs.values())), (query.get_text() for query in queries_obj.values())))
+tfidf.fit(chain((doc.get_text() for doc in tqdm(corpus_obj.docs.values())), (query.title for query in queries_obj.values())))
 idfs = dict(zip(tfidf.get_feature_names(), tfidf.idf_))
 
 # assert len(words) == len(idfs.keys())

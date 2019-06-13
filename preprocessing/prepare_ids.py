@@ -69,7 +69,7 @@ if __name__ == "__main__":
     cleared_ids_test = []
 
     for i in range(k):
-        topic_test = topics[i*50:(i+1)*50]
+        topic_test = topics[(i*50):(i+1)*50]
         topic_train = [topic for topic in topics if topic not in topic_test]
         ids_train = prepare_train_ids(qrels, topic_train, n_pos, n_neg)
         ids_test = prepare_test_ids(qrels, topic_test)

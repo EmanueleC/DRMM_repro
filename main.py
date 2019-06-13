@@ -159,7 +159,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
     # print("Average prec@20 in folds:", average_prec)
     # print("Average nDCG@20 in folds:", average_ndcg)
     # make_all_prec_recall_fold_curves(all_prec_rec_val)
-    return average_map
+    return all_map_test, all_p20_test, all_ndcg20_test, average_map, average_prec, average_ndcg
 
 
 with open('config.json') as config_file:
@@ -206,12 +206,19 @@ matching_histograms = MatchingHistograms(num_bins, max_query_len)
 
 f = open("parameter-tuning.txt", "a+")
 
-for conf in [(20, 20, (30, 30)), (20, 16, (50, 50))]:
+for conf in [(10, 20, (100, 100))]:
     sample = conf[2]
     num_epoch = conf[0]
     batch_size = conf[1]
     ids_train, ids_test = load_ids(retrieval_alg, sample[0], sample[1])
-    text = "\nepochs: " + str(num_epoch) + "\nbatch_size: " + str(batch_size) + "\nEsempi: " + str(sample) + "\nAVERAGE MAP IN FOLDS: " + str(cross_validation(5, num_epoch, batch_size, ids_train, ids_test))
+    all_map_test, all_p20_test, all_ndcg20_test, average_map, average_prec, average_ndcg = cross_validation(5, num_epoch, batch_size, ids_train, ids_test)
+    text = "\nepochs: " + str(num_epoch) + "\nbatch_size: " + str(batch_size) + "\nEsempi: " + str(sample) + "\nAVERAGE MAP IN FOLDS: "
+    text += "\n all map test:" + " ".join(all_map_test)
+    text += "\n all_p20_test:" + " ".join(all_p20_test)
+    text += "\n all_ndcg20_test:" + " ".join(all_ndcg20_test)
+    text += "\n all average_map:" + average_map
+    text += "\n average_prec:" + average_prec
+    text += "\n average_ndcg:" + average_ndcg
     print(text)
     f.write(text)
 f.close()
