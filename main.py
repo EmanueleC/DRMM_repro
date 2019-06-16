@@ -9,7 +9,11 @@ import json
 import math
 
 
-def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
+def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test, str_config, histograms_mode, opt):
+    print(conf)
+    histograms_total_filename = "preprocessing/encoded_data/histograms/histograms_total" + config + "_glove_" + str(glv) \
+                                + "_" + histograms_mode
+    histograms_total = load_from_pickle_file(histograms_total_filename)  # 1.2 gb!
     all_map_test = []
     all_p20_test = []
     all_ndcg20_test = []
@@ -26,8 +30,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
             tf.random.set_random_seed(SEED)
 
             model = DRMM(num_layers, units, activation_functions, max_query_len, num_bins, emb_size, gating_function,
-                         SEED,
-                         learning_rate)
+                         SEED, learning_rate, opt)
             saver = tf.train.Saver()
             session.run(tf.global_variables_initializer())
             train_steps = len(ids_train_fold) - batch_size
@@ -65,6 +68,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
                                                                feed_dict={model.matching_histograms: batch_hist,
                                                                           model.queries_idf: batch_idf,
                                                                           model.queries_embeddings: batch_emb})
+                    # print(sims_batch_train)
                     assert len(sims_batch_train) == batch_size
                     sims_train_epoch += list(sims_batch_train)
                     epoch_train_loss += c_train
@@ -81,26 +85,25 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
                 sims_val = session.run([model.sims], feed_dict={model.matching_histograms: hist_val,
                                                                 model.queries_idf: idf_val,
                                                                 model.queries_embeddings: emb_val})
-
                 print('Epoch %s' % epoch)
                 print('train_loss=%2.4f, time=%4.4fs' % (epoch_train_loss, time.time() - start_time))
                 all_losses_train.append(epoch_train_loss)
                 start_time = time.time()
                 train_epoch_run_text = score_to_text_run(sims_train_epoch, ids_train_fold, "sw_st_idf_lch")
                 val_epoch_run_text = score_to_text_run(sims_val[0], ids_test_fold, "sw_st_idf_lch")
-                with open("run_results/training/train_epoch_run_" + str(k) + ".txt", 'w') as file:
+                with open(retrieval_alg + "/training/train_epoch_run_" + str(k) + ".txt", 'w') as file:
                     file.write(train_epoch_run_text)
-                with open("run_results/validation/val_epoch_run_" + str(k) + ".txt", 'w') as file:
+                with open(retrieval_alg + "/validation/val_epoch_run_" + str(k) + ".txt", 'w') as file:
                     file.write(val_epoch_run_text)
-                map_train, p20_train, ndcg20_train = get_metrics_run("run_results/training/train_epoch_run_" + str(k) +
+                map_train, p20_train, ndcg20_train = get_metrics_run(retrieval_alg + "/training/train_epoch_run_" + str(k) +
                                                                      ".txt", qrels_path, False)
                 print('train map=%2.4f, p@20=%2.4f, ndcg@20=%2.4f, time=%4.4fs' % (
                 map_train, p20_train, ndcg20_train, time.time() - start_time))
-                map_val, p20_val, ndcg20_val = get_metrics_run("run_results/validation/val_epoch_run_" + str(k) +
+                map_val, p20_val, ndcg20_val = get_metrics_run(retrieval_alg + "/validation/val_epoch_run_" + str(k) +
                                                                ".txt", qrels_path, False)
                 print('val map=%2.4f, p@20=%2.4f, ndcg@20=%2.4f, time=%4.4fs' % (
                 map_val, p20_val, ndcg20_val, time.time() - start_time))
-                if math.fabs(best_val_map - map_val) < min_delta:  # early stopping
+                if map_val - best_val_map < min_delta:  # early stopping
                     if count_patience < patience:
                         count_patience += 1
                     else:
@@ -119,7 +122,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
                 tf.summary.scalar('loss', all_losses_train)
                 tf.summary.merge_all()
 
-            make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_train, all_map_val, all_p20_val,
+            make_metric_plot(str_config, all_losses_train, all_map_train, all_p20_train, all_ndcg20_train, all_map_val, all_p20_val,
                              all_ndcg20_val, k)
 
             hist_test = []
@@ -138,10 +141,10 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
                                                                model.queries_embeddings: emb_test})
             assert len(predictions[0]) == len(ids_test_fold)
             test_run_text = score_to_text_run(predictions[0], ids_test_fold, "sw_st_idf_ch")
-            with open("run_results/test/test_run_" + str(k) + ".txt", 'w') as file:
+            with open(retrieval_alg + "/test/test_run_" + str(k) + ".txt", 'w') as file:
                 file.write(test_run_text)
             print("Testing required: %4.4fs" % (time.time() - start_time))
-            map_t, p20_t, ndcg20_t, prec_rec_test = get_metrics_run("run_results/test/test_run_" + str(k) + ".txt",
+            map_t, p20_t, ndcg20_t, prec_rec_test = get_metrics_run(retrieval_alg + "/test/test_run_" + str(k) + ".txt",
                                                                     qrels_path, True)
             all_prec_rec_test.append(prec_rec_test)
             print(map_t, p20_t, ndcg20_t)
@@ -149,7 +152,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
             all_p20_test.append(p20_t)
             all_ndcg20_test.append(ndcg20_t)
 
-            make_prec_recall_11pt_curve(prec_rec_test, k)
+            make_prec_recall_11pt_curve(str_config, prec_rec_test, k)
 
     average_map = sum(all_map_test) / len(all_map_test)
     average_prec = sum(all_p20_test) / len(all_p20_test)
@@ -158,7 +161,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test):
     # print("Average MAP in folds:", average_map)
     # print("Average prec@20 in folds:", average_prec)
     # print("Average nDCG@20 in folds:", average_ndcg)
-    # make_all_prec_recall_fold_curves(all_prec_rec_val)
+    make_all_prec_recall_fold_curves(str_config, all_prec_rec_test)
     return all_map_test, all_p20_test, all_ndcg20_test, average_map, average_prec, average_ndcg
 
 
@@ -168,7 +171,7 @@ with open('config.json') as config_file:
 SEED = data["seed"]
 stopwords = data["stopwords"]
 stemmed = data["stemmed"]
-histograms_mode = data["hist_mode"]
+# histograms_mode = data["hist_mode"]
 min_delta = data["min_delta"]
 patience = data["patience"]
 retrieval_alg = data["retrieval_alg"]
@@ -183,18 +186,15 @@ learning_rate = data["learning_rate"]
 
 gating_function = data["gating_function"]
 # num_epochs = data["num_epochs"]
-conf = data["conf"]
+config = data["conf"]
 glv = data["use_glove"]
 
-padded_query_idfs_filename = "preprocessing/encoded_data/idfs/padded_query_idfs" + conf
-padded_query_embs_filename = "preprocessing/encoded_data/embeddings/padded_query_embs" + conf
-histograms_total_filename = "preprocessing/encoded_data/histograms/histograms_total" + conf + "_glove_" + str(glv)\
-                            + "_" + histograms_mode
+padded_query_idfs_filename = "preprocessing/encoded_data/idfs/padded_query_idfs" + config
+padded_query_embs_filename = "preprocessing/encoded_data/embeddings/padded_query_embs" + config
 qrels_path = "preprocessing/pre_data/Qrels/Qrels_cleaned.txt"
 
 padded_query_idfs = load_from_pickle_file(padded_query_idfs_filename)
 padded_query_embs = load_from_pickle_file(padded_query_embs_filename)
-histograms_total = load_from_pickle_file(histograms_total_filename)  # 1.2 gb!
 
 max_query_len = len(list(padded_query_idfs.values())[0])
 
@@ -206,19 +206,22 @@ matching_histograms = MatchingHistograms(num_bins, max_query_len)
 
 f = open("parameter-tuning.txt", "a+")
 
-for conf in [(10, 20, (100, 100))]:
+for conf in [(20, 20, (80, 160), "Adagrad", "lch")]:
     sample = conf[2]
     num_epoch = conf[0]
     batch_size = conf[1]
+    opt = conf[3]
+    histograms_mode = conf[4]
+    str_config = "retr_" + retrieval_alg + "_sample_" + str(sample) + "_epoch_" + str(num_epoch) + "_bs_" + str(batch_size) + "histmode_" + str(histograms_mode) + "_term_" + gating_function + "_opt_" + opt
     ids_train, ids_test = load_ids(retrieval_alg, sample[0], sample[1])
-    all_map_test, all_p20_test, all_ndcg20_test, average_map, average_prec, average_ndcg = cross_validation(5, num_epoch, batch_size, ids_train, ids_test)
-    text = "\nepochs: " + str(num_epoch) + "\nbatch_size: " + str(batch_size) + "\nEsempi: " + str(sample) + "\nAVERAGE MAP IN FOLDS: "
-    text += "\n all map test:" + " ".join(all_map_test)
-    text += "\n all_p20_test:" + " ".join(all_p20_test)
-    text += "\n all_ndcg20_test:" + " ".join(all_ndcg20_test)
-    text += "\n all average_map:" + average_map
-    text += "\n average_prec:" + average_prec
-    text += "\n average_ndcg:" + average_ndcg
+    all_map_test, all_p20_test, all_ndcg20_test, average_map, average_prec, average_ndcg = cross_validation(5, num_epoch, batch_size, ids_train, ids_test, str_config, histograms_mode, opt)
+    text = str_config + "\nAVERAGE MAP IN FOLDS: "
+    text += "\n all map test:" + " ".join(map(str, all_map_test))
+    text += "\n all_p20_test:" + " ".join(map(str, all_p20_test))
+    text += "\n all_ndcg20_test:" + " ".join(map(str, all_ndcg20_test))
+    text += "\n all average_map:" + str(average_map)
+    text += "\n average_prec:" + str(average_prec)
+    text += "\n average_ndcg:" + str(average_ndcg)
     print(text)
     f.write(text)
 f.close()

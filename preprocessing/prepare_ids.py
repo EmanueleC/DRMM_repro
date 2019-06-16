@@ -3,6 +3,7 @@ from tqdm import tqdm
 import random
 import itertools
 import json
+from itertools import cycle
 
 labels_train_filename = "preprocessing/pre_data/ids/ids_train"
 labels_test_filename = "preprocessing/pre_data/ids/ids_test"
@@ -39,7 +40,7 @@ def prepare_train_ids(qrels, topics_train, n_pos, n_neg):
                 neg_train.append(random.choice(nonrels))
                 i += 1
 
-            ids_train += [x for x in itertools.chain.from_iterable(itertools.zip_longest(pos_train, neg_train)) if x]
+            ids_train += [x for x in itertools.chain.from_iterable(zip(pos_train, cycle(neg_train)) if n_pos > n_neg else zip(cycle(pos_train), neg_train)) if x]
         else:
             print("Topic empty qrels:", topic)
 

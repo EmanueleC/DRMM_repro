@@ -388,7 +388,7 @@ def load_all_data(stopwords, stemmed, retrieval_alg):
     return corpus_obj, queries_obj, qrels_obj, queries_model, corpus_model
 
 
-def make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_train, all_map_val, all_p20_val, all_ndcg20_val, k):
+def make_metric_plot(conf, all_losses_train, all_map_train, all_p20_train, all_ndcg20_train, all_map_val, all_p20_val, all_ndcg20_val, k):
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
     ax1.set_title("Training loss")
     ax1.plot(all_losses_train, 'r.-')
@@ -399,7 +399,7 @@ def make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_
     ax4.set_title("Training nDCG@20")
     ax4.plot(all_ndcg20_train, 'g.-')
     plt.tight_layout()
-    plt.savefig("plot_metrics/train_fold_" + str(k), bbox_inches="tight")
+    plt.savefig("plot_metrics/train_fold_" + str(k) + conf, bbox_inches="tight")
     plt.clf()
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
     ax1.set_title("Validation map")
@@ -409,21 +409,21 @@ def make_metric_plot(all_losses_train, all_map_train, all_p20_train, all_ndcg20_
     ax3.set_title("Validation ndcg@20")
     ax3.plot(all_ndcg20_val, 'g.--')
     plt.tight_layout()
-    plt.savefig("plot_metrics/val_fold_" + str(k), bbox_inches="tight")
+    plt.savefig("plot_metrics/val_fold_" + str(k) + conf, bbox_inches="tight")
     plt.clf()
 
 
-def make_prec_recall_11pt_curve(prec_rec, k):
+def make_prec_recall_11pt_curve(conf, prec_rec, k):
     recall = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     plt.plot(recall, prec_rec, '.-')
     plt.ylabel("Precision")
     plt.xlabel("Recall")
     plt.title("Interpolated recall-precision plot - fold " + str(k))
-    plt.savefig("plot_metrics/recall_precision_fold_" + str(k))
+    plt.savefig("plot_metrics/recall_precision_fold_" + str(k) + conf)
     plt.clf()
 
 
-def make_all_prec_recall_fold_curves(all_prec_rec):
+def make_all_prec_recall_fold_curves(conf, all_prec_rec):
     recall = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     color = ['r.-', 'k.-', 'b.-', 'g.-', 'y.-']
     for i in range(5):
@@ -432,7 +432,7 @@ def make_all_prec_recall_fold_curves(all_prec_rec):
     plt.xlabel("Recall")
     plt.title("Interpolated recall-precision plot of all folds")
     plt.legend(["fold 1", "fold 2", "fold 3", "fold 4", "fold 5"], loc=0)
-    plt.savefig("plot_metrics/interpolated recall-precision plot")
+    plt.savefig("plot_metrics/interpolated recall-precision plot_" + conf)
     plt.clf()
 
 
