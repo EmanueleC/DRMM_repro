@@ -65,9 +65,7 @@ class DRMM():
 
         return tf.map_fn(lambda c: proc_query(c, hist_hidden_repr), elems=self.queries_embeddings, dtype=tf.float32)'''
 
-        coeffs = tf.map_fn(lambda q: tf.nn.softmax(tf.map_fn(lambda w:
-                                         tf.reduce_sum(tf.multiply(w, self.w_g_vec), axis=-1),
-                                         elems=q, dtype=tf.float32)),
+        coeffs = tf.map_fn(lambda q: tf.nn.softmax(tf.tensordot(q, self.w_g_vec, 1)),
                            elems=self.queries_embeddings, name="softmax")
         return tf.multiply(coeffs, hist_hidden_repr)
 

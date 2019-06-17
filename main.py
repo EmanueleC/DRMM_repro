@@ -111,6 +111,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test, str_c
                         break
                 if map_val > best_val_map:  # save model with best validation map
                     best_val_map = map_val
+                    count_patience = 0
                     saver.save(session, "models/model.ckpt")
                 all_map_train.append(map_train)
                 all_p20_train.append(p20_train)
@@ -206,7 +207,7 @@ matching_histograms = MatchingHistograms(num_bins, max_query_len)
 
 f = open("parameter-tuning.txt", "a+")
 
-for conf in [(20, 20, (80, 160), "Adagrad", "lch")]:
+for conf in [(20, 20, (100, 100), "Adagrad", "lch")]:
     sample = conf[2]
     num_epoch = conf[0]
     batch_size = conf[1]
