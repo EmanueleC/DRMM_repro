@@ -42,8 +42,6 @@ queries = load_from_pickle_file(queries_filename)
 corpus = load_from_pickle_file(corpus_filename)
 model = load_from_pickle_file(corpus_model_filename)
 model_out = load_from_pickle_file(corpus_model_out_filename)
-if glv:
-    model = load_glove_model("data/glove.6B.300d.txt")
 oov_corpus = load_from_pickle_file(oov_corpus_filename)
 oov_queries = load_from_pickle_file(oov_queries_filename)
 
