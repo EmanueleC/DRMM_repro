@@ -88,6 +88,8 @@ for query_id, query in tqdm(queries_obj.items()):
     print(query.title, encoded_queries[query_id])
     encoded_queries_oov[query_id] = encode_oov(query.title, word_dict)
 
+print(encoded_queries_oov)
+
 idf_filename = "preprocessing/pre_data/idfs/idfs" + conf
 idfs = load_from_pickle_file(idf_filename)
 

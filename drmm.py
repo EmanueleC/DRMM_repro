@@ -28,7 +28,8 @@ class DRMM():
             if opt == "Adagrad":
                 self.optimizer = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss, name="train_opt")
             elif opt == "Adam":
-                self.optimizer = tf.train.AdamOptimizer().minimize(self.loss, name="train_opt")
+                # self.optimizer = tf.train.AdamOptimizer().minimize(self.loss, name="train_opt")
+                self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.loss, name="train_opt")
 
     def compute_scores(self):
         hist_hidden_repr = self.compute_hist_hidden_repr(self.matching_histograms)

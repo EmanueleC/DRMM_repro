@@ -1,6 +1,6 @@
 from utilities.utilities import load_from_pickle_file, save_to_pickle_file
 from tqdm import tqdm
-from nltk.stem.porter import *
+from krovetzstemmer import Stemmer
 import json
 
 with open('config.json') as config_file:
@@ -36,7 +36,7 @@ if stopwords:
 
 if stemmed:
 
-    stemmer = PorterStemmer()
+    stemmer = Stemmer()
 
     vocab = load_from_pickle_file("preprocessing/pre_data/vocabulary")
 

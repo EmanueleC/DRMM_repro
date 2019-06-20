@@ -166,6 +166,7 @@ def clear_text(text: str) -> str:
     text = re.sub(r'_', ' ', text)  # remove underscore
     text = re.sub(r'\d*', '', text)  # remove all numbers and words that contain numbers
     text = re.sub(' +', ' ', text)  # remove all additional spaces
+    text = re.sub(r'\b\w{1,3}\b', '', text)  # remove all words which length is < 3
     text = text.lower()
     return text
 
