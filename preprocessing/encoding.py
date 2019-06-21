@@ -95,13 +95,14 @@ idfs = load_from_pickle_file(idf_filename)
 
 idfs = encode_idf(idfs, word_dict)
 
-outv = KeyedVectors(300)
-outv.vocab = model.wv.vocab  # same
-outv.index2word = model.wv.index2word  # same
-outv.syn0 = model.syn1neg  # different
+if not glv:
+    outv = KeyedVectors(300)
+    outv.vocab = model.wv.vocab  # same
+    outv.index2word = model.wv.index2word  # same
+    outv.syn0 = model.syn1neg  # different
+    we_out = encode_we(outv, word_dict, glv)
 
 we = encode_we(model, word_dict, glv)
-we_out = encode_we(outv, word_dict, glv)
 
 max_query_len = max([len(q.title.split()) for q in queries_obj.values()])
 
@@ -131,8 +132,8 @@ save_to_pickle_file("preprocessing/encoded_data/Corpus/Corpus_encoded" + conf, e
 save_to_pickle_file("preprocessing/encoded_data/Queries/Queries_encoded" + conf, encoded_queries)
 save_to_pickle_file("preprocessing/encoded_data/Corpus/Corpus_encoded_oov" + conf, encoded_docs_oov)
 save_to_pickle_file("preprocessing/encoded_data/Queries/Queries_encoded_oov" + conf, encoded_queries_oov)
-save_to_pickle_file("preprocessing/encoded_data/preranked/preranked_total", qrels.ground_truth)
 save_to_pickle_file("preprocessing/encoded_data/embeddings/word_embeddings" + conf, we)
-save_to_pickle_file("preprocessing/encoded_data/embeddings/word_embeddings_out" + conf, we_out)
+if not glv:
+    save_to_pickle_file("preprocessing/encoded_data/embeddings/word_embeddings_out" + conf, we_out)
 save_to_pickle_file("preprocessing/encoded_data/idfs/padded_query_idfs" + conf, padded_query_idfs)
 save_to_pickle_file("preprocessing/encoded_data/embeddings/padded_query_embs" + conf, padded_query_embs)

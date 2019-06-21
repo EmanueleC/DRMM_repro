@@ -1,8 +1,8 @@
 {
   "stopwords": true,
   "stemmed": true,
-  "hist_mode": "lch",
-  "use_glove": false,
+  "hist_mode": "nh",
+  "use_glove": true,
   "gating_function": "idf",
   "seed": 42,
   "batch_size": 20,
@@ -11,8 +11,8 @@
   "emb_size": 300,
   "min_delta": 0.001,
   "patience": 5,
-  "retrieval_alg": "QL",
+  "retrieval_alg": "Bm25",
   "learning_rate": 0.01,
-  "pos": 40,
-  "neg": 50
+  "pos": 80,
+  "neg": 160
 }
