@@ -19,9 +19,9 @@ with open('config.json') as config_file:
 retrieval_alg = data["retrieval_alg"]
 
 if retrieval_alg == "QL":
-    preranked_filename = "comparison/terrier_preranked/DirichletLM_6.res"
+    preranked_filename = "comparison/anserini_preranked/DirichletLM_6.txt"
 elif retrieval_alg == "Bm25":
-    preranked_filename = "comparison/terrier_preranked/BM25b0.75_5.res"
+    preranked_filename = "comparison/anserini_preranked/Bm25.txt"
 
 """ create runs objects from galago batch-search output """
 with open(preranked_filename, 'r') as results:

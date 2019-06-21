@@ -162,11 +162,11 @@ def clear_text(text: str) -> str:
     text = re.sub('\n+', ' ', text)
     # text = re.sub('\. ', '\n', text)  # full stop ends a sentence
     text = re.sub(r'-', ' ', text)  # split words between hyphens
-    text = re.sub(r'[^\w\s]', '', text)  # keeps any alphanumeric character and the underscore, remove enything else; remove any whitespace
+    text = re.sub(r'[^\w\s]', ' ', text)  # keeps any alphanumeric character and the underscore, remove enything else; remove any whitespace
     text = re.sub(r'_', ' ', text)  # remove underscore
     text = re.sub(r'\d*', '', text)  # remove all numbers and words that contain numbers
+    text = re.sub(r'\b\w{1,1}\b', '', text)  # remove all words which length is < 1
     text = re.sub(' +', ' ', text)  # remove all additional spaces
-    text = re.sub(r'\b\w{1,3}\b', '', text)  # remove all words which length is < 3
     text = text.lower()
     return text
 
@@ -217,12 +217,13 @@ def parse_query(root, option):
             text = title
         elif option == "description":
             text = desc
+        old_text = text
         text = clear_text(text)
         text = '\n' + topic_id + ' ' + text
         title = clear_text(title)
         desc = clear_text(desc)
         result = result + text
-        # print("query id:", topic_id, "title", title)
+        # print("old text:", old_text, "\nnew text:", text)
         query = Query(topic_id, title, desc)
         queries.update({topic_id: query})
 
@@ -250,11 +251,10 @@ def parse_docs(root):
         text = '\ndoc_id ' + document_id + ' ' + text
         headline = clear_text(headline)
         content = clear_text(content)
-        # print("doc id:", document_id, "original text [:150]", old_text[:150], "text [:150]", text[:150])
+        # print("doc id:", document_id, "original text [:100]", old_text[:100], "text [:100]", text[:100])
         result = result + text
         if len(content) > 0:
             doc = Document(document_id, headline, content)
-            # print("Headline:", headline, "Content:", content)
             corpus_document.add_doc(doc)
 
     return result, corpus_document

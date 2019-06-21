@@ -26,9 +26,9 @@ if stopwords:
         for line in f.readlines():
             stopwords_list.append(line.strip('\n'))
 
-    for _, doc in tqdm(corpus_obj.docs.items()):
+    '''for _, doc in tqdm(corpus_obj.docs.items()):
         doc.headline = " ".join([word for word in doc.headline.split() if word not in stopwords_list])
-        doc.content = " ".join([word for word in doc.content.split() if word not in stopwords_list])
+        doc.content = " ".join([word for word in doc.content.split() if word not in stopwords_list])'''
 
     for _, query in tqdm(queries_obj.items()):
         query.title = " ".join([word for word in query.title.split() if word not in stopwords_list])
