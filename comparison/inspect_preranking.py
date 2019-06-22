@@ -24,9 +24,12 @@ x = list(map(str, list(range(301, 451)) + list(range(601, 701))))
 
 for topic in tqdm(x):
     topic_freq_pos.append(math.log(len(qrels.get_relevant_docs(topic).keys()) + 1))
-    pos.append((len(qrels.get_relevant_docs(topic).keys())*100)/len(qrels.get_pairs_topic(topic)))
+    # pos.append((len(qrels.get_relevant_docs(topic).keys())*100)/len(qrels.get_pairs_topic(topic)))
+    pos.append(len(qrels.get_relevant_docs(topic).keys()))
+    print(pos)
     topic_freq_neg.append(math.log(len(qrels.get_non_relevant_docs(topic).keys()) + 1))
-    neg.append((len(qrels.get_non_relevant_docs(topic).keys())*100)/len(qrels.get_pairs_topic(topic)))
+    # neg.append((len(qrels.get_non_relevant_docs(topic).keys())*100)/len(qrels.get_pairs_topic(topic)))
+    neg.append(len(qrels.get_non_relevant_docs(topic).keys()))
 
 p1 = plt.stackplot(x, topic_freq_pos, topic_freq_neg, labels=["Positive documents", "Negative documents"])
 

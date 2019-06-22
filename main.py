@@ -207,7 +207,7 @@ matching_histograms = MatchingHistograms(num_bins, max_query_len)
 
 f = open("parameter-tuning.txt", "a+")
 
-for conf in [(20, 20, (100, 100), "Adagrad", "lch")]:
+for conf in [(20, 20, (50, 100), "Adagrad", "lch")]:
     sample = conf[2]
     num_epoch = conf[0]
     batch_size = conf[1]
