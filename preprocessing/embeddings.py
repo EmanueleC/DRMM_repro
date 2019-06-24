@@ -28,17 +28,23 @@ def text_embeddings(data, file_name, q):
     embeddings(data, algo, size, window, min_count, mode, negative, sample, file_name + ".bin")
 
 
-corpus_filename = "preprocessing/pre_data/Corpus/Corpus" + conf
-queries_filename = "preprocessing/pre_data/Queries/Queries" + conf
+'''corpus_filename = "preprocessing/pre_data/Corpus/Corpus" + conf
+queries_filename = "preprocessing/pre_data/Queries/Queries" + conf'''
 corpus_model_filename = "preprocessing/pre_data/models/corpus_model" + conf
 queries_model_filename = "preprocessing/pre_data/models/queries_model" + conf
 
-corpus_obj = load_from_pickle_file(corpus_filename)
+corpus_sent_filename = "preprocessing/pre_data/Corpus/sents_corpus" + conf
+queries_sent_filename = "preprocessing/pre_data/Queries/sents_queries" + conf
 
-text_embeddings(corpus_obj, corpus_model_filename, False)
+corpus_sent = load_from_pickle_file(corpus_sent_filename)
+queries_sent = load_from_pickle_file(queries_sent_filename)
 
-queries_obj = load_from_pickle_file(queries_filename)
+'''corpus_obj = load_from_pickle_file(corpus_filename)'''''
 
-lines_queries = [query.get_text().split() for query in queries_obj.values()]
+text_embeddings(corpus_sent, corpus_model_filename, False)
 
-text_embeddings(lines_queries, queries_model_filename, True)
+'''queries_obj = load_from_pickle_file(queries_filename)
+
+lines_queries = [query.get_text().split() for query in queries_obj.values()]'''
+
+text_embeddings(queries_sent, queries_model_filename, True)

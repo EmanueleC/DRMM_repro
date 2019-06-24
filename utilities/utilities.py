@@ -10,6 +10,7 @@ import html
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
+import nltk
 
 
 class Query:
@@ -165,7 +166,7 @@ def clear_text(text: str) -> str:
     text = re.sub(r'[^\w\s]', ' ', text)  # keeps any alphanumeric character and the underscore, remove enything else; remove any whitespace
     text = re.sub(r'_', ' ', text)  # remove underscore
     text = re.sub(r'\d*', '', text)  # remove all numbers and words that contain numbers
-    text = re.sub(r'\b\w{1,1}\b', '', text)  # remove all words which length is < 1
+    text = re.sub(r'\b\w{1,2}\b', '', text)  # remove all words which length is < 2
     text = re.sub(' +', ' ', text)  # remove all additional spaces
     text = text.lower()
     return text
@@ -199,10 +200,9 @@ def fix_topics(xml):
     return result
 
 
-@jit
 def parse_query(root, option):
 
-    result = ""
+    result = []
     queries = dict()
     for topic in root.find_all('top'):
         topic_id = topic.find('num').text.strip()
@@ -218,11 +218,12 @@ def parse_query(root, option):
         elif option == "description":
             text = desc
         old_text = text
-        text = clear_text(text)
+        sents_text = nltk.sent_tokenize(text)
+        sents_text = [clear_text(sent) for sent in sents_text]
         text = '\n' + topic_id + ' ' + text
         title = clear_text(title)
         desc = clear_text(desc)
-        result = result + text
+        result = result + sents_text
         # print("old text:", old_text, "\nnew text:", text)
         query = Query(topic_id, title, desc)
         queries.update({topic_id: query})
@@ -230,10 +231,9 @@ def parse_query(root, option):
     return result, queries
 
 
-@jit
 def parse_docs(root):
 
-    result = ""
+    result = []
     corpus_document = Corpus()
 
     for doc in root.find_all('DOC'):
@@ -247,12 +247,14 @@ def parse_docs(root):
         content = re.sub('<[^>]*>', ' ', content)
         text = headline + ' ' + content
         old_text = text
+        sents_text = nltk.sent_tokenize(text)
+        sents_text = [clear_text(sent) for sent in sents_text]
         text = clear_text(text)
         text = '\ndoc_id ' + document_id + ' ' + text
         headline = clear_text(headline)
         content = clear_text(content)
         # print("doc id:", document_id, "original text [:100]", old_text[:100], "text [:100]", text[:100])
-        result = result + text
+        result = result + sents_text
         if len(content) > 0:
             doc = Document(document_id, headline, content)
             corpus_document.add_doc(doc)

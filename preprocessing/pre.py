@@ -35,13 +35,16 @@ corpus_length = len(path_files_list)
 print(corpus_length, "files to be processed")
 corpus = Corpus()
 
+sents_corpus = []
+
 for fileName in tqdm(list(path_files_list.keys())):
 
     with open(path_files_list[fileName], 'r', encoding='utf-8', errors='ignore') as f:
         xml = f.read()
 
-    text, corpus_doc = process_file(xml, False)  # all documents with content length == 0 are ignored
-    vocabulary.update(text.split())
+    sents_text, corpus_doc = process_file(xml, False)  # all documents with content length == 0 are ignored
+    sents_corpus = sents_corpus + sents_text
+    vocabulary.update([w for sent in sents_text for w in sent.split()])
     corpus.update(corpus_doc)
 
 # Save corpus object
@@ -52,7 +55,10 @@ with open(topic_path, 'r') as f:
 
 xml = fix_topics(xml)
 
-_, queries = process_file(xml, True)
+sents_queries, queries = process_file(xml, True)
+
+save_to_pickle_file("preprocessing/pre_data/Corpus/sents_corpus", sents_corpus)
+save_to_pickle_file("preprocessing/pre_data/Queries/sents_queries", sents_queries)
 
 # Save Queries object
 save_to_pickle_file("preprocessing/pre_data/Queries/Queries", queries)
