@@ -31,13 +31,13 @@ for topic in tqdm(x):
     # neg.append((len(qrels.get_non_relevant_docs(topic).keys())*100)/len(qrels.get_pairs_topic(topic)))
     neg.append(len(qrels.get_non_relevant_docs(topic).keys()))
 
-p1 = plt.stackplot(x, topic_freq_pos, topic_freq_neg, labels=["Positive documents", "Negative documents"])
+p1 = plt.stackplot(x, topic_freq_pos, topic_freq_neg, labels=["Relevant documents", "Non relevant documents"])
 
 plt.legend(loc="best")
 plt.xticks(x[::20], rotation='90')
-plt.title("# (Logs) Documents retrieved per topics with " + retrieval_alg + " algorithm")
+plt.title("# Documents retrieved per topics with " + retrieval_alg + " algorithm")
 plt.xlabel('Topics IDs')
-plt.ylabel('# documents retrieved')
+plt.ylabel('# (logs) documents retrieved')
 plt.savefig("comparison/queries_frequencies" + retrieval_alg + ".png")
 print("avg pos:", sum(pos) / len(pos))
 print("avg neg:", sum(neg) / len(neg))

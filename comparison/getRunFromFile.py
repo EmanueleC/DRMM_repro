@@ -21,7 +21,7 @@ retrieval_alg = data["retrieval_alg"]
 if retrieval_alg == "QL":
     preranked_filename = "comparison/terrier_preranked/DirichletLM_6.res"
 elif retrieval_alg == "Bm25":
-    preranked_filename = "comparison/terrier_preranked/BM25.res"
+    preranked_filename = "comparison/terrier_preranked/Bm25.res"
 
 """ create runs objects from galago batch-search output """
 with open(preranked_filename, 'r') as results:

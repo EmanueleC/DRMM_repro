@@ -39,12 +39,12 @@ queries_sent_filename = "preprocessing/pre_data/Queries/sents_queries" + conf
 corpus_sent = load_from_pickle_file(corpus_sent_filename)
 queries_sent = load_from_pickle_file(queries_sent_filename)
 
-'''corpus_obj = load_from_pickle_file(corpus_filename)'''''
+# corpus_obj = load_from_pickle_file(corpus_filename)
 
 text_embeddings(corpus_sent, corpus_model_filename, False)
 
-'''queries_obj = load_from_pickle_file(queries_filename)
+# queries_obj = load_from_pickle_file(queries_filename)
 
-lines_queries = [query.get_text().split() for query in queries_obj.values()]'''
+# lines_queries = [query.get_text().split() for query in queries_obj.values()]
 
 text_embeddings(queries_sent, queries_model_filename, True)

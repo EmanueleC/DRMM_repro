@@ -11,13 +11,14 @@ stopwords = data["stopwords"]
 stemmed = data["stemmed"]
 histograms_mode = data["hist_mode"]
 conf = data["conf"]
+retrieval_alg = data["retrieval_alg"]
 
 queries_filename = "preprocessing/encoded_data/Queries/Queries_encoded" + conf
 corpus_filename = "preprocessing/encoded_data/Corpus/Corpus_encoded" + conf
 corpus_model_filename = "preprocessing/encoded_data/embeddings/word_embeddings" + conf
 oov_queries_filename = "preprocessing/encoded_data/Queries/Queries_encoded_oov" + conf
 oov_corpus_filename = "preprocessing/encoded_data/Corpus/Corpus_encoded_oov" + conf
-qrels_filename = "preranked/preranked_total"
+qrels_filename = "preranked/preranked_total_" + retrieval_alg
 queries = load_from_pickle_file(queries_filename)
 corpus = load_from_pickle_file(corpus_filename)
 corpus_model = load_from_pickle_file(corpus_model_filename)
@@ -37,7 +38,7 @@ pos_oov_document = oov_corpus.get(positive_doc[1])
 neg_document = corpus.get(negative_doc[1])
 neg_oov_document = oov_corpus.get(negative_doc[1])
 oov_query = oov_queries.get(topic)
-pos_hist = matching_histograms.get_histograms(query, pos_document, corpus_model, oov_query, pos_oov_document, histograms_mode)
-neg_hist = matching_histograms.get_histograms(query, neg_document, corpus_model, oov_query, neg_oov_document, histograms_mode)
+pos_hist = matching_histograms.get_histograms(query, pos_document, corpus_model, None, oov_query, pos_oov_document, histograms_mode)
+neg_hist = matching_histograms.get_histograms(query, neg_document, corpus_model, None, oov_query, neg_oov_document, histograms_mode)
 plot_histograms(positive_doc, pos_hist, histograms_mode, "positive", conf)
 plot_histograms(negative_doc, neg_hist, histograms_mode, "negative", conf)

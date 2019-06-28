@@ -25,6 +25,7 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test, str_c
         print("len test fold:", len(ids_test_fold))
         best_val_map = - math.inf
         count_patience = 0
+        tf.reset_default_graph()
         with tf.Session() as session:
             tf.summary.FileWriter("./graphs/fold" + str(k), session.graph)
             tf.random.set_random_seed(SEED)
@@ -68,7 +69,6 @@ def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test, str_c
                                                                feed_dict={model.matching_histograms: batch_hist,
                                                                           model.queries_idf: batch_idf,
                                                                           model.queries_embeddings: batch_emb})
-                    # print(sims_batch_train)
                     assert len(sims_batch_train) == batch_size
                     sims_train_epoch += list(sims_batch_train)
                     epoch_train_loss += c_train
@@ -208,7 +208,7 @@ matching_histograms = MatchingHistograms(num_bins, max_query_len)
 f = open("parameter-tuning.txt", "a+")
 
 
-for conf in [(20, 16, (100, 100), "Adagrad", "lch")]:
+for conf in [(20, 20, (100, 100), "Adagrad", "lch")]:
     sample = conf[2]
     num_epoch = conf[0]
     batch_size = conf[1]
