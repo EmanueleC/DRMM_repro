@@ -1,7 +1,9 @@
 # DRMM_repro
 Implementation of a "Deep Relevance Matching Model" (DRMM) for Ad-hoc Retrieval
 ## References:
-"A Deep Relevance Matching Model for Ad-hoc Retrieval" - Jiafeng Guo, Yixing Fan, Qingyao Ai, W. Bruce Croft (https://arxiv.org/abs/1711.08611)
+1. "A Deep Relevance Matching Model for Ad-hoc Retrieval" - Jiafeng Guo, Yixing Fan, Qingyao Ai, W. Bruce Croft (https://arxiv.org/abs/1711.08611)
+2. Terrier IR platform (http://terrier.org/)
+3. Word2Vec (https://radimrehurek.com/gensim/models/word2vec.html)
 
 ### Readme (English)
 
@@ -39,7 +41,7 @@ python -m histograms.save_hist
 python main.py # execute the model
 ```
 
-DRMM uses Word2Vec, that generates word embeddings for word in corpus vocabulary. Then, they are exploited to generate "histograms" input.
+DRMM uses Word2Vec, that generates word embeddings for word in corpus vocabulary. Then, they are exploited to generate "histograms" input. An histograms contains a map of matching signals between a query and a document.
 
 An example of cosine similarity between a query and a portion of document:
 
@@ -51,7 +53,7 @@ Positive histogram             |  Negative histograms
 :-------------------------:|:-------------------------:
 ![alt text](https://github.com/EmanueleC/MasterThesis/blob/master/res/img/positive_ch.png)  |  ![alt text](https://github.com/EmanueleC/MasterThesis/blob/master/res/img/negative_ch.png)
 
-To run dataset analysis:
+To run dataset analysis, use:
 
 ```
 python -m utilities.data_analysis
@@ -60,6 +62,12 @@ python -m utilities.data_analysis
 To explore different settings of DRMM, one may change the config.json file, which contains the following options: initial retrieval algorithm to use, seed, stopwords removal, stemming, embeddings size, histograms modalities, gating function, number of epochs, mini batch size, learning rate, and more.
 
 A constraint to satisfy is the following: # doc pos + # doc neg must be a multiple of the mini batch size, so that, at each batch the loss is comput w.r.t. a given query.
+
+Final results (with configuration in config.json):
+
+MAP | Prec@20 | nDCG@20
+--------------------------|--------------------------|--------------------------
+0.214| 0.318| 0.378
 
 ### Readme (Italiano)
 
@@ -85,6 +93,19 @@ MAP| 0.241 | 0.247
 Prec@20| 0.404 | 0.417
 nDCG@20| 0.343 | 0.359
 
+
+DRMM utilizza Word2Vec che genera gli embeddings per le parole nel dizionario costruito dal corpus di documenti. Poi, gli embeddings vengono usati per generare gli "istogrammi" di input. Un istogramma contiene una "mappa" di segnali di match (di diversa intensità) tra una query e un documento.
+
+An example of cosine similarity between a query and a portion of document:
+
+![alt text](https://github.com/EmanueleC/MasterThesis/blob/master/res/img/cos_sim_sample.png)
+
+An example of two histograms (positive/negative):
+
+Positive histogram             |  Negative histograms
+:-------------------------:|:-------------------------:
+![alt text](https://github.com/EmanueleC/MasterThesis/blob/master/res/img/positive_ch.png)  |  ![alt text](https://github.com/EmanueleC/MasterThesis/blob/master/res/img/negative_ch.png)
+
 Per eseguire DRMM occorre dare i seguenti comandi nell'ordine in cui sono presentati:
 
 ```
@@ -108,3 +129,9 @@ python -m utilities.data_analysis
 Per provare diverse configurazioni di DRMM, è possibile cambiare il file config.json, che contiene le seguenti opzioni: tipo di algoritmo di reperimento da usare per il pre-rank, seed, rimozione stopwords, stemming, dimensioni embeddings, modalità istogrammi, funzione di gating, numero di epoche, dimensione dei mini batch, learning rate, e altre ancora.
 
 Il vincolo da rispettare è che la somma del numero di documenti positivi e il numero di documenti negativi scelti sia un multiplo della dimensione dei mini batch, così un mini batch riguarda solo una query.
+
+Risultati ottenuti (con la configurazione in config.json):
+
+MAP | Prec@20 | nDCG@20
+--------------------------|--------------------------|--------------------------
+0.214| 0.318| 0.378
