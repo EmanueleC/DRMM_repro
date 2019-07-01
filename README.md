@@ -39,6 +39,18 @@ python -m histograms.save_hist
 python main.py # execute the model
 ```
 
+DRMM uses Word2Vec, that generates word embeddings for word in corpus vocabulary. Then, they are exploited to generate "histograms" input.
+
+An example of cosine similarity between a query and a portion of document:
+
+![alt text](https://github.com/EmanueleC/MasterThesis/blob/master/res/img/cos_sim_sample.png)
+
+An example of two histograms (positive/negative):
+
+Positive histogram             |  Negative histograms
+:-------------------------:|:-------------------------:
+![alt text](https://github.com/EmanueleC/MasterThesis/blob/master/res/img/positive_ch.png)  |  ![alt text](https://github.com/EmanueleC/MasterThesis/blob/master/res/img/negative_ch.png)
+
 To run dataset analysis:
 
 ```
