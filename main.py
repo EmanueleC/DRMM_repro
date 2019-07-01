@@ -10,7 +10,6 @@ import math
 
 
 def cross_validation(k_folds, num_epochs, batch_size, ids_train, ids_test, str_config, histograms_mode, opt):
-    print(conf)
     histograms_total_filename = "preprocessing/encoded_data/histograms/histograms_total" + config + "_glove_" + str(glv) \
                                 + "_" + histograms_mode
     histograms_total = load_from_pickle_file(histograms_total_filename)  # 1.2 gb!
@@ -208,22 +207,21 @@ matching_histograms = MatchingHistograms(num_bins, max_query_len)
 f = open("parameter-tuning.txt", "a+")
 
 
-for conf in [(20, 20, (100, 100), "Adagrad", "lch")]:
-    sample = conf[2]
-    num_epoch = conf[0]
-    batch_size = conf[1]
-    opt = conf[3]
-    histograms_mode = conf[4]
-    str_config = "retr_" + retrieval_alg + "_sample_" + str(sample) + "_epoch_" + str(num_epoch) + "_bs_" + str(batch_size) + "histmode_" + str(histograms_mode) + "_term_" + gating_function + "_opt_" + opt
-    ids_train, ids_test = load_ids(retrieval_alg, sample[0], sample[1])
-    all_map_test, all_p20_test, all_ndcg20_test, average_map, average_prec, average_ndcg = cross_validation(5, num_epoch, batch_size, ids_train, ids_test, str_config, histograms_mode, opt)
-    text = str_config + "\nAVERAGE MAP IN FOLDS: "
-    text += "\n all map test:" + " ".join(map(str, all_map_test))
-    text += "\n all_p20_test:" + " ".join(map(str, all_p20_test))
-    text += "\n all_ndcg20_test:" + " ".join(map(str, all_ndcg20_test))
-    text += "\n all average_map:" + str(average_map)
-    text += "\n average_prec:" + str(average_prec)
-    text += "\n average_ndcg:" + str(average_ndcg)
-    print(text)
-    f.write(text)
+sample = (data["pos"], data["neg"])
+num_epoch = data["num_epochs"]
+batch_size = data["batch_size"]
+opt = "Adagrad"
+histograms_mode = data["hist_mode"]
+str_config = "retr_" + retrieval_alg + "_sample_" + str(sample) + "_epoch_" + str(num_epoch) + "_bs_" + str(batch_size) + "histmode_" + str(histograms_mode) + "_term_" + gating_function + "_opt_" + opt
+ids_train, ids_test = load_ids(retrieval_alg, sample[0], sample[1])
+all_map_test, all_p20_test, all_ndcg20_test, average_map, average_prec, average_ndcg = cross_validation(5, num_epoch, batch_size, ids_train, ids_test, str_config, histograms_mode, opt)
+text = str_config + "\nAVERAGE MAP IN FOLDS: "
+text += "\n all map test:" + " ".join(map(str, all_map_test))
+text += "\n all_p20_test:" + " ".join(map(str, all_p20_test))
+text += "\n all_ndcg20_test:" + " ".join(map(str, all_ndcg20_test))
+text += "\n all average_map:" + str(average_map)
+text += "\n average_prec:" + str(average_prec)
+text += "\n average_ndcg:" + str(average_ndcg)
+print(text)
+f.write(text)
 f.close()

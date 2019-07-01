@@ -11,7 +11,7 @@
   "emb_size": 300,
   "min_delta": 0.001,
   "patience": 5,
-  "retrieval_alg": "QL",
+  "retrieval_alg": "Bm25",
   "learning_rate": 0.01,
   "pos": 100,
   "neg": 100
