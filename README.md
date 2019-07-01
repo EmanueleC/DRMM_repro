@@ -30,14 +30,14 @@ nDCG@20| 0.343 | 0.359
 In order to run DRMM, the following steps must be executed in order:
 
 ```
-python -m preprocessing.pre
-python -m comparison.getRunFromFile
-python -m preprocessing.stem_stopwords
-python -m preprocessing.tf-idf
-python -m preprocessing.prepare_ids
-python -m preprocessing.embeddings
-python -m preprocessing.encoding
-python -m histograms.save_hist
+python -m preprocessing.pre # clean and serialize corpus documents and queries
+python -m comparison.getRunFromFile # serialize run to re-rank
+python -m preprocessing.stem_stopwords # stemming + stopwords removal
+python -m preprocessing.tf-idf # compute idf for word in vocabulary
+python -m preprocessing.prepare_ids # prepare examples for DRMM
+python -m preprocessing.embeddings # generate word embeddings with Word2Vec
+python -m preprocessing.encoding # encode all data in python dictionaries
+python -m histograms.save_hist # generate histograms
 python main.py # execute the model
 ```
 
